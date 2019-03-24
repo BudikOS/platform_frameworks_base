@@ -203,6 +203,8 @@ cc_defaults {
         "attentionmanager_native_aidl-cpp",
         "server_configurable_flags",
         "service.incremental",
+        "vendor.samsung.hardware.light@2.0",
+        "vendor.samsung.hardware.light@3.0",
     ],
 
     static_libs: [
