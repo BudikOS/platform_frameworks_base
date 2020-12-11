@@ -6026,22 +6026,8 @@ public class ActivityManagerService extends IActivityManager.Stub
     }
 
     private static boolean isUartEnabled() {
-        // console=null should be set in the kernel cmdline when UART is off
-        final String console_string = "console=null";
-        boolean isEnabled = false;
-        try (Scanner sc = new Scanner(new FileInputStream("/proc/cmdline"))) {
-            StringBuilder scOutput = new StringBuilder();
-            while (sc.hasNextLine()){
-                scOutput.append(sc.nextLine());
-            }
-            isEnabled = !scOutput.toString().contains(console_string);
-        } catch (IOException ignored) {}
-        // This check will only work on userdebug and eng builds due
-        // to the console service not being present on user builds.
-        if (SystemProperties.get("init.svc.console").equals("running")) {
-            isEnabled = true;
-        }
-        return isEnabled;
+        // Disabled for TrebleDroid - GSIs don't need this notification
+        return false;
     }
 
     private static boolean isPrototypeDevice() {
