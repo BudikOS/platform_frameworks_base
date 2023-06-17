@@ -274,7 +274,9 @@ java_library_static {
         "profiling_flags_lib",
         "android.adpf.sessionmanager_aidl-java",
         "clipboard_flags_lib",
-        "vendor.samsung.hardware.sysinput-V1.2-java", // HIDL
+        // HIDL
+        "vendor.mediatek.hardware.mtkpower-V1.1-java",
+        "vendor.samsung.hardware.sysinput-V1.2-java",
         "aconfig_adbdauth_flags_java_lib",
         "AvfBuildFlags",
         "textclassifier_flags_lib",
