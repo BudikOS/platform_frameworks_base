@@ -2749,11 +2749,7 @@ public final class ProcessList extends ProcessListInternal
                             String errorStr = "Unable to create process group for "
                                 + app.processName + " (uid: " + uid + ", pid: " + startResult.pid
                                 + "), errno: " + res;
-                            if (res == -OsConstants.ESRCH) {
                                 Slog.e(ActivityManagerService.TAG, errorStr);
-                            } else {
-                                throw new AssertionError(errorStr);
-                            }
                         } else {
                             app.mProcessGroupCreated = true;
                         }
