@@ -667,6 +667,11 @@ public class TelephonyManager {
      * </ul>
      */
     public int getActiveModemCount() {
+        int simSlots = SystemProperties.getInt("persist.sys.phh.sim_slots", -1);
+        if (simSlots >= 0) {
+            return simSlots;
+        }
+
         if (!isDeviceVoiceCapable() && !isDeviceSmsCapable() && !isDataCapable()) return 0;
 
         return switch(TelephonyProperties.multi_sim_config().orElse("").toLowerCase(Locale.ROOT)) {
@@ -684,6 +689,11 @@ public class TelephonyManager {
      * {@link #getActiveModemCount} returns 1 while this API returns 2.
      */
     public int getSupportedModemCount() {
+        int simSlots = SystemProperties.getInt("persist.sys.phh.sim_slots", -1);
+        if (simSlots >= 0) {
+            return simSlots;
+        }
+
         return TelephonyProperties.max_active_modems().orElse(getActiveModemCount());
     }
 
