@@ -386,7 +386,8 @@ final class PackageAbiHelperImpl implements PackageAbiHelper {
                 // Force the match for these cases
                 // 1. pkg.getTargetSdkVersion >= Build.VERSION_CODES.VANILLA_ICE_CREAM
                 // 2. cpuAbiOverride is null. If it is non-null, it is set via shell for testing
-                final boolean forceMatch =
+                // 3. Not a system app (system apps are controlled by the ROM builder)
+                final boolean forceMatch = !isSystemApp &&
                         pkg.getTargetSdkVersion() >= Build.VERSION_CODES.VANILLA_ICE_CREAM
                         && cpuAbiOverride == null;
 
