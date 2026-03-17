@@ -27,6 +27,7 @@ import android.graphics.Color;
 import android.graphics.Insets;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
+import android.os.SystemProperties;
 import android.os.Trace;
 import android.util.AttributeSet;
 import android.util.TypedValue;
@@ -157,7 +158,7 @@ public class KeyguardStatusBarView extends RelativeLayout {
         // mStatusIconArea
         mStatusIconArea.setPaddingRelative(
                 mStatusIconArea.getPaddingStart(),
-                getResources().getDimensionPixelSize(R.dimen.status_bar_padding_top),
+                mStatusIconArea.getPaddingTop(),
                 mStatusIconArea.getPaddingEnd(),
                 mStatusIconArea.getPaddingBottom()
         );
@@ -209,8 +210,10 @@ public class KeyguardStatusBarView extends RelativeLayout {
         Resources res = getResources();
         mSystemIconsSwitcherHiddenExpandedMargin = res.getDimensionPixelSize(
                 R.dimen.system_icons_switcher_hidden_expanded_margin);
-        mStatusBarPaddingEnd = res.getDimensionPixelSize(
-                R.dimen.status_bar_padding_end);
+        mStatusBarPaddingEnd = SystemProperties.getInt("persist.sys.phh.status_bar_padding_end", -1);
+        if (mStatusBarPaddingEnd == -1)
+                mStatusBarPaddingEnd = res.getDimensionPixelSize(
+                        R.dimen.status_bar_padding_end);
         mMinDotWidth = res.getDimensionPixelSize(
                 R.dimen.ongoing_appops_dot_min_padding);
         mCutoutSideNudge = getResources().getDimensionPixelSize(
