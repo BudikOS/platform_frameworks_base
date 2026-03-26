@@ -56,7 +56,11 @@ public abstract class VerityUtils {
     private static final int HASH_SIZE_BYTES = 32;
 
     public static boolean isFsVeritySupported() {
-        return Build.VERSION.DEVICE_INITIAL_SDK_INT >= Build.VERSION_CODES.R;
+        // on GSI builds the system partition is modern but the vendor kernel may
+        // predate fs-verity (added in 5.4).  check both the SDK level and whether
+        // the kernel actually has CONFIG_FS_VERITY enabled.
+        return Build.VERSION.DEVICE_INITIAL_SDK_INT >= Build.VERSION_CODES.R
+                && new java.io.File("/sys/fs/verity").exists();
     }
 
     /** Enables fs-verity for the file without signature. */

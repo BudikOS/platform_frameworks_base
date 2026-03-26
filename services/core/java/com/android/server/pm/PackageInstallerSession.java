@@ -4593,7 +4593,7 @@ public class PackageInstallerSession extends IPackageInstallerSession.Stub {
 
         // Needs to happen before the first v4 signature verification, which happens in
         // getAddedApkLitesLocked.
-        if (!isIncrementalInstallation()) {
+        if (!isIncrementalInstallation() && VerityUtils.isFsVeritySupported()) {
             enableFsVerityToAddedApksWithIdsig();
         }
 

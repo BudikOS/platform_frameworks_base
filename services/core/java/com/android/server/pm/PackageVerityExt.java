@@ -133,7 +133,7 @@ public class PackageVerityExt {
             }
         }
 
-        if (checkFsVerity) {
+        if (checkFsVerity && VerityUtils.isFsVeritySupported()) {
             checkFsVerity(systemPkgUpdate);
         }
 

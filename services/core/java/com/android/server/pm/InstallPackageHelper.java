@@ -177,6 +177,7 @@ import com.android.internal.pm.pkg.component.ParsedIntentInfo;
 import com.android.internal.pm.pkg.component.ParsedPermission;
 import com.android.internal.pm.pkg.component.ParsedPermissionGroup;
 import com.android.internal.pm.pkg.parsing.ParsingPackageUtils;
+import com.android.internal.security.VerityUtils;
 import com.android.internal.util.ArrayUtils;
 import com.android.internal.util.CollectionUtils;
 import com.android.server.EventLogTags;
@@ -2144,7 +2145,9 @@ final class InstallPackageHelper {
             // this is an update to a system package
 
             try {
-                PackageVerityExt.checkFsVerity(parsedPackage);
+                if (VerityUtils.isFsVeritySupported()) {
+                    PackageVerityExt.checkFsVerity(parsedPackage);
+                }
             } catch (PackageManagerException e) {
                 String message = "fs-verity not set up for system package update " + e;
                 boolean abortInstall = true;

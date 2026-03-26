@@ -92,7 +92,9 @@ public class ApkSignatureSchemeV4Verifier {
                 // 2. Try fs-verity next. fs-verity checks against the Merkle tree, but the
                 // v4 signature file (including a raw root hash) is managed separately. We need to
                 // ensure the signed data from the file is consistent with the actual file.
-                needsConsistencyCheck = true;
+                // on GSI builds with old kernels (< 5.4), fs-verity is not available --
+                // skip the consistency check rather than failing the install.
+                needsConsistencyCheck = VerityUtils.isFsVeritySupported();
 
                 final File idsig = new File(apk.getAbsolutePath() + V4Signature.EXT);
                 try (var fis = new FileInputStream(idsig.getAbsolutePath())) {
