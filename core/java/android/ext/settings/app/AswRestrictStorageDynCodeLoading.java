@@ -11,7 +11,6 @@ import android.ext.settings.ExtSettings;
 import android.util.ArraySet;
 
 import com.android.internal.R;
-import com.android.internal.os.SELinuxFlags;
 import com.android.server.os.nano.AppCompatProtos;
 
 /** @hide */
@@ -40,16 +39,11 @@ public class AswRestrictStorageDynCodeLoading extends AppSwitch {
     @Override
     public Boolean getImmutableValue(Context ctx, int userId, ApplicationInfo appInfo,
                                      GosPackageState ps, StateInfo si) {
+        // allow dcl restriction toggle for all apps, including system apps.
+        // default value logic still applies (system apps default to restricted
+        // unless they are in the allowlist).
         if (appInfo.isSystemApp()) {
-            if (shouldAllowByDefaultToSystemPkg(ctx, appInfo.packageName)) {
-                // allow manual restriction
-                return null;
-            }
-            if (SELinuxFlags.isSystemAppSepolicyWeakeningAllowed()) {
-                return null;
-            }
-            si.immutabilityReason = IR_IS_SYSTEM_APP;
-            return true;
+            return null;
         }
 
         if (ps.hasFlag(GosPackageStateFlag.ENABLE_EXPLOIT_PROTECTION_COMPAT_MODE)) {

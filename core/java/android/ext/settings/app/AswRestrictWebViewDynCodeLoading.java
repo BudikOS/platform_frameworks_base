@@ -8,7 +8,6 @@ import android.ext.settings.ExtSettings;
 import android.util.ArraySet;
 
 import com.android.internal.R;
-import com.android.internal.os.SELinuxFlags;
 
 /** @hide */
 public class AswRestrictWebViewDynCodeLoading extends AppSwitch {
@@ -34,16 +33,11 @@ public class AswRestrictWebViewDynCodeLoading extends AppSwitch {
     @Override
     public Boolean getImmutableValue(Context ctx, int userId, ApplicationInfo appInfo,
                                      GosPackageState ps, StateInfo si) {
+        // allow dcl restriction toggle for all apps, including system apps.
+        // default value logic still applies (system apps default to restricted
+        // unless they are in the allowlist).
         if (appInfo.isSystemApp()) {
-            if (shouldAllowByDefaultToSystemPackage(ctx, appInfo.packageName)) {
-                // allow manual restriction
-                return null;
-            } else {
-                if (SELinuxFlags.isSystemAppSepolicyWeakeningAllowed()) {
-                    return null;
-                }
-                return true;
-            }
+            return null;
         }
 
         return null;
