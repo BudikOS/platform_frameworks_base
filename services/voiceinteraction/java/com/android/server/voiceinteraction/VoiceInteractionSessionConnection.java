@@ -288,6 +288,13 @@ final class VoiceInteractionSessionConnection implements ServiceConnection,
                 Settings.Secure.ASSIST_SCREENSHOT_ENABLED, 1, mUser) == 0) {
             flags |= VoiceInteractionSession.SHOW_WITH_SCREENSHOT;
         }
+        // Kernels below 4.14 do not implement the sync-fence / dma-buf semantics
+        // required by the GPU composition path used for assist screenshots.
+        // Taking a screenshot on these kernels causes a GPU driver panic that
+        // kills system_server. Force-disable the screenshot context.
+        if (isLegacyKernel()) {
+            flags |= VoiceInteractionSession.SHOW_WITH_SCREENSHOT;
+        }
 
         // If this session should restrict access to AssistStructure screen content and the
         // associated permission flag is enabled then READ_ASSIST_STRUCTURE_SCREEN_CONTENT must be
@@ -305,6 +312,23 @@ final class VoiceInteractionSessionConnection implements ServiceConnection,
             flags |= VoiceInteractionSession.SHOW_WITH_ASSIST_STRUCTURE_SCREEN_CONTENT;
         }
         return flags;
+    }
+
+    private static boolean isLegacyKernel() {
+        String kv = System.getProperty("os.version");
+        if (kv == null || kv.isEmpty()) return false;
+        try {
+            // version strings are typically "4.9.XXX-..."
+            int firstDot = kv.indexOf('.');
+            if (firstDot < 0) return false;
+            int major = Integer.parseInt(kv.substring(0, firstDot));
+            int secondDot = kv.indexOf('.', firstDot + 1);
+            String minorStr = (secondDot < 0) ? kv.substring(firstDot + 1) : kv.substring(firstDot + 1, secondDot);
+            int minor = Integer.parseInt(minorStr);
+            return major < 4 || (major == 4 && minor < 14);
+        } catch (NumberFormatException e) {
+            return false;
+        }
     }
 
     public boolean showLocked(@NonNull Bundle args, int flags, @Nullable String attributionTag,
