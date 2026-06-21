@@ -203,6 +203,7 @@ import android.os.Message;
 import android.os.PowerManager;
 import android.os.RemoteCallbackList;
 import android.os.RemoteException;
+import android.os.SystemProperties;
 import android.os.Trace;
 import android.os.UserHandle;
 import android.os.UserManager;
@@ -2960,6 +2961,16 @@ class DisplayContent extends RootDisplayArea implements WindowManagerPolicy.Disp
             }
 
             if (device.getKeyboardType() == InputDevice.KEYBOARD_TYPE_ALPHABETIC) {
+                // some devices ship a vendor nanoapp that registers an alphabetic input
+                // device even with no physical keyboard attached, which forces
+                // Configuration.keyboard=QWERTY and makes soft IMEs hide their keys.
+                // when the property is set, skip such devices so the configuration stays
+                // NOKEYS and soft input works. physical key events still flow through.
+                if (SystemProperties.getBoolean(
+                        "persist.sys.phh.disable_fake_hw_keyboard", false)
+                        && device.getName().equalsIgnoreCase("Xiaomi Keyboard")) {
+                    continue;
+                }
                 config.keyboard = Configuration.KEYBOARD_QWERTY;
                 keyboardPresence |= presenceFlag;
             }
