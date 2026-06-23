@@ -9523,7 +9523,16 @@ public class NotificationManagerService extends SystemService {
         boolean isImportanceFixed = mPermissionHelper.isPermissionFixed(pkg, userId);
         r.setImportanceFixed(isImportanceFixed);
         if (notification.isFgsOrUij()) {
-            if (((channel.getUserLockedFields() & NotificationChannel.USER_LOCKED_IMPORTANCE) == 0
+            // restlessos: suppress the treble_app foreground-service notification.
+            // force the record importance to NONE so it is not displayed, while still
+            // posting it (the fgs stays foreground -- startForeground clears the anr
+            // timer and ams never demotes a fgs whose notification is suppressed, so
+            // the process stays unfrozen). all other fgs/uij notifications keep the
+            // standard LOW importance floor so music, calls, downloads etc. remain
+            // visible.
+            if ("me.phh.treble.app".equals(pkg)) {
+                r.setSystemImportance(IMPORTANCE_NONE);
+            } else if (((channel.getUserLockedFields() & NotificationChannel.USER_LOCKED_IMPORTANCE) == 0
                         || !channel.isUserVisibleTaskShown())
                     && (r.getImportance() == IMPORTANCE_MIN
                             || r.getImportance() == IMPORTANCE_NONE)) {
