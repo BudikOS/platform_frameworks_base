@@ -2640,7 +2640,19 @@ public final class Bitmap implements Parcelable {
     public void writeToParcel(@NonNull Parcel p, int flags) {
         checkRecycled("Can't parcel a recycled bitmap");
         noteHardwareBitmapSlowCall();
-        if (!nativeWriteToParcel(mNativePtr, mDensity, p)) {
+        // On legacy kernels (< 4.14) the binder transaction buffer is limited to ~1MB.
+        // Large bitmaps (album art, thumbnails) exceed this and cause a native crash.
+        // Scale down bitmaps over 256px to keep the parcel under the binder limit.
+        if (isLegacyKernel() && (getWidth() > 256 || getHeight() > 256)) {
+            float scale = 256f / Math.max(getWidth(), getHeight());
+            Bitmap scaled = Bitmap.createScaledBitmap(this,
+                    (int) (getWidth() * scale), (int) (getHeight() * scale), true);
+            scaled.noteHardwareBitmapSlowCall();
+            if (!nativeWriteToParcel(scaled.mNativePtr, scaled.mDensity, p)) {
+                throw new RuntimeException("native writeToParcel failed");
+            }
+            scaled.recycle();
+        } else if (!nativeWriteToParcel(mNativePtr, mDensity, p)) {
             throw new RuntimeException("native writeToParcel failed");
         }
         if (hasGainmap()) {
@@ -2648,6 +2660,25 @@ public final class Bitmap implements Parcelable {
             p.writeTypedObject(mGainmap, flags);
         } else {
             p.writeBoolean(false);
+        }
+    }
+
+    private static volatile Boolean sIsLegacyKernel;
+
+    private static boolean isLegacyKernel() {
+        if (sIsLegacyKernel != null) return sIsLegacyKernel;
+        String kv = System.getProperty("os.version");
+        if (kv == null || kv.isEmpty()) return sIsLegacyKernel = false;
+        try {
+            int firstDot = kv.indexOf('.');
+            if (firstDot < 0) return sIsLegacyKernel = false;
+            int major = Integer.parseInt(kv.substring(0, firstDot));
+            int secondDot = kv.indexOf('.', firstDot + 1);
+            String minorStr = (secondDot < 0) ? kv.substring(firstDot + 1) : kv.substring(firstDot + 1, secondDot);
+            int minor = Integer.parseInt(minorStr);
+            return sIsLegacyKernel = (major < 4 || (major == 4 && minor < 14));
+        } catch (NumberFormatException e) {
+            return sIsLegacyKernel = false;
         }
     }
 

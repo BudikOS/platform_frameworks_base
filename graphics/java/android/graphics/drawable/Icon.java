@@ -685,6 +685,9 @@ public final class Icon implements Parcelable {
     /** @hide */
     public static final int MIN_ASHMEM_ICON_SIZE = 128 * (1 << 10);
 
+    // Largest bitmap dimension that safely fits a legacy (< 4.14) binder transaction buffer.
+    private static final int LEGACY_KERNEL_MAX_IMAGE_SIZE = 256;
+
     /**
      * Puts the memory used by this instance into Ashmem memory, if possible.
      * @hide
@@ -1232,6 +1235,12 @@ public final class Icon implements Parcelable {
      * @hide
      */
     public static Bitmap scaleDownIfNecessary(Bitmap bitmap, int maxWidth, int maxHeight) {
+        if (isLegacyKernel()) {
+            // Kernels below 4.14 cap the binder transaction buffer at ~1MB, so keep bitmaps
+            // that travel inside a notification parcel within that budget.
+            maxWidth = Math.min(maxWidth, LEGACY_KERNEL_MAX_IMAGE_SIZE);
+            maxHeight = Math.min(maxHeight, LEGACY_KERNEL_MAX_IMAGE_SIZE);
+        }
         int bitmapWidth = bitmap.getWidth();
         int bitmapHeight = bitmap.getHeight();
         if (bitmapWidth > maxWidth || bitmapHeight > maxHeight) {
@@ -1253,6 +1262,23 @@ public final class Icon implements Parcelable {
                     true /* filter */);
         }
         return bitmap;
+    }
+
+    private static boolean isLegacyKernel() {
+        String kv = System.getProperty("os.version");
+        if (kv == null || kv.isEmpty()) return false;
+        try {
+            int firstDot = kv.indexOf('.');
+            if (firstDot < 0) return false;
+            int major = Integer.parseInt(kv.substring(0, firstDot));
+            int secondDot = kv.indexOf('.', firstDot + 1);
+            String minorStr = secondDot < 0
+                    ? kv.substring(firstDot + 1) : kv.substring(firstDot + 1, secondDot);
+            int minor = Integer.parseInt(minorStr);
+            return major < 4 || (major == 4 && minor < 14);
+        } catch (NumberFormatException e) {
+            return false;
+        }
     }
 
     /**
