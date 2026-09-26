@@ -3473,14 +3473,9 @@ public class WallpaperManager {
      */
     public static InputStream openRawDefaultWallpaper(Context context,
             @SetWallpaperFlags int which) {
-        final String whichProp;
-        final int defaultResId;
-        /* Factory-default lock wallpapers are not yet supported.
-        whichProp = which == FLAG_LOCK ? PROP_LOCK_WALLPAPER : PROP_WALLPAPER;
-        defaultResId = which == FLAG_LOCK ? R.drawable.default_lock_wallpaper :  ....
-        */
-        whichProp = PROP_WALLPAPER;
-        defaultResId = R.drawable.default_wallpaper;
+        final String whichProp = which == FLAG_LOCK ? PROP_LOCK_WALLPAPER : PROP_WALLPAPER;
+        final int defaultResId =
+                which == FLAG_LOCK ? 0 : R.drawable.default_wallpaper;
         final String path = SystemProperties.get(whichProp);
         final InputStream wallpaperInputStream = getWallpaperInputStream(path);
         if (wallpaperInputStream != null) {
@@ -3491,10 +3486,12 @@ public class WallpaperManager {
         if (cmfWallpaperInputStream != null) {
             return cmfWallpaperInputStream;
         }
-        try {
-            return context.getResources().openRawResource(defaultResId);
-        } catch (NotFoundException e) {
-            // no default defined for this device; this is not a failure
+        if (defaultResId != 0) {
+            try {
+                return context.getResources().openRawResource(defaultResId);
+            } catch (NotFoundException e) {
+                // no default defined for this device; this is not a failure
+            }
         }
         return null;
     }
