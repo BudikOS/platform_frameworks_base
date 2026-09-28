@@ -450,7 +450,6 @@ java_library {
     name: "framework-non-updatable-unbundled-impl-libs",
     static_libs: [
         "framework-location.impl",
-        "framework-virtualization.impl",
     ] + select(release_flag("RELEASE_TELECOM_MAINLINE_MODULE"), {
         true: [],
         default: [
