@@ -291,7 +291,6 @@ import android.service.personalcontext.PersonalContextManager;
 import android.service.uprobestats.DynamicInstrumentationManager;
 import android.service.uprobestats.UprobestatsFrameworkInitializer;
 import android.service.vr.IVrManager;
-import android.system.virtualmachine.VirtualizationFrameworkInitializer;
 import android.telecom.TelecomManager;
 import android.telephony.MmsManager;
 import android.telephony.TelephonyFrameworkInitializer;
@@ -2215,7 +2214,6 @@ public final class SystemServiceRegistry {
             OnDeviceIntelligenceFrameworkInitializer.registerServiceWrappers();
             DeviceLockFrameworkInitializer.registerServiceWrappers();
             NpuManagerFrameworkInitializer.registerServiceWrappers();
-            VirtualizationFrameworkInitializer.registerServiceWrappers();
             ConnectivityFrameworkInitializerBaklava.registerServiceWrappers();
 
             if (TelecomDependencies.isMainlineBuildFlagEnabled()) {

@@ -33,7 +33,6 @@ import android.content.pm.StagedApexInfo;
 import android.os.Binder;
 import android.os.RemoteException;
 import android.os.UserHandle;
-import android.system.virtualmachine.BuildFlags;
 import android.text.TextUtils;
 import android.util.Slog;
 
@@ -84,10 +83,6 @@ final class PackageManagerNative extends IPackageManagerNative.Stub {
         PackageInfoNative result = new PackageInfoNative();
         result.packageName = packageName;
 
-        if (BuildFlags.SUPPORT_AVF_ADVANCE_MULTITENANCY && pInfo.applicationInfo != null) {
-            result.sourceDir = pInfo.applicationInfo.sourceDir;
-            result.splitSourceDirs = pInfo.applicationInfo.splitSourceDirs;
-        }
         if (pInfo.signingInfo == null) {
             return result;
         }
