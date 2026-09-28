@@ -151,10 +151,6 @@ custom_platform_bootclasspath {
             apex: "com.android.wifi",
             module: "com.android.wifi-bootclasspath-fragment",
         },
-        {
-            apex: "com.android.virt",
-            module: "com.android.virt-bootclasspath-fragment",
-        },
     ],
 
     soong_config_variables: {
