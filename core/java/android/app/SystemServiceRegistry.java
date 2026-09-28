@@ -16,7 +16,6 @@
 
 package android.app;
 
-import static android.aiseal.Flags.aisealHostApis;
 import static android.app.appfunctions.flags.Flags.enableAppFunctionManager;
 import static android.app.appfunctions.flags.Flags.enableAppFunctionPermissionV2;
 import static android.app.lskfreset.flags.Flags.enableLskfResetManager;
@@ -30,7 +29,6 @@ import static android.service.chooser.Flags.interactiveChooser;
 import android.accounts.AccountManager;
 import android.accounts.IAccountManager;
 import android.adservices.AdServicesFrameworkInitializer;
-import android.aiseal.AiSealManager;
 import android.annotation.FlaggedApi;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
@@ -199,7 +197,6 @@ import android.net.wifi.WifiFrameworkInitializer;
 import android.net.wifi.nl80211.WifiNl80211Manager;
 import android.net.wifi.sharedconnectivity.app.SharedConnectivityManager;
 import android.nfc.NfcFrameworkInitializer;
-import android.npumanager.NpuManagerFrameworkInitializer;
 import android.ondevicepersonalization.OnDevicePersonalizationFrameworkInitializer;
 import android.os.BatteryManager;
 import android.os.BatteryStats;
@@ -2125,22 +2122,6 @@ public final class SystemServiceRegistry {
                     });
         }
 
-        if (aisealHostApis()) {
-            registerService(
-                    Context.AISEAL_HOST_SERVICE,
-                    AiSealManager.class,
-                    new CachedServiceFetcher<>() {
-                        @Override
-                        public AiSealManager createService(ContextImpl ctx)
-                                throws ServiceNotFoundException {
-                            if (!ctx.getPackageManager().hasSystemFeature(FEATURE_AISEAL)) {
-                                return null;
-                            }
-                            return new AiSealManager(ctx);
-                        }
-                    });
-        }
-
         if (enableAppFunctionPermissionV2()) {
             registerService(
                     Context.ALLOWLIST_SERVICE,
@@ -2213,7 +2194,6 @@ public final class SystemServiceRegistry {
             OnDevicePersonalizationFrameworkInitializer.registerServiceWrappers();
             OnDeviceIntelligenceFrameworkInitializer.registerServiceWrappers();
             DeviceLockFrameworkInitializer.registerServiceWrappers();
-            NpuManagerFrameworkInitializer.registerServiceWrappers();
             ConnectivityFrameworkInitializerBaklava.registerServiceWrappers();
 
             if (TelecomDependencies.isMainlineBuildFlagEnabled()) {

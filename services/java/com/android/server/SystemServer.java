@@ -126,7 +126,6 @@ import com.android.internal.widget.ILockSettings;
 import com.android.server.accessibility.AccessibilityManagerService;
 import com.android.server.accounts.AccountManagerService;
 import com.android.server.adb.AdbService;
-import com.android.server.aiseal.AiSealSystemService;
 import com.android.server.alarm.AlarmManagerService;
 import com.android.server.allowlist.AllowlistService;
 import com.android.server.am.ActivityManagerService;
@@ -432,8 +431,6 @@ public final class SystemServer implements Dumpable {
                     + "OnDevicePersonalizationSystemService$Lifecycle";
     private static final String UPDATABLE_DEVICE_CONFIG_SERVICE_CLASS =
             "com.android.server.deviceconfig.DeviceConfigInit$Lifecycle";
-    private static final String NPU_MANAGER_SERVICE_CLASS =
-            "com.android.server.npumanager.NpuManagerService";
 
 
     /*
@@ -1676,13 +1673,6 @@ public final class SystemServer implements Dumpable {
             // Now that SettingsProvider is ready, reactivate SQLiteCompatibilityWalFlags
             SQLiteCompatibilityWalFlags.reset();
             t.traceEnd();
-
-            if (mPackageManager.hasSystemFeature(PackageManager.FEATURE_NEURAL_PROCESSING_UNIT)
-                    && com.android.npumanager.Flags.npumanagerEnabled()) {
-                t.traceBegin("StartNpuManagerService");
-                mSystemServiceManager.startService(NPU_MANAGER_SERVICE_CLASS);
-                t.traceEnd();
-            }
 
             // Records errors and logs, for example wtf()
             // Currently this service indirectly depends on SettingsProvider so do this after
@@ -3029,17 +3019,6 @@ public final class SystemServer implements Dumpable {
             t.traceBegin("StartOnDevicePersonalizationSystemService");
             mSystemServiceManager.startService(ON_DEVICE_PERSONALIZATION_SYSTEM_SERVICE_CLASS);
             t.traceEnd();
-        }
-
-        // AiSeal
-        if (mPackageManager.hasSystemFeature(PackageManager.FEATURE_AISEAL)
-                && android.aiseal.Flags.aisealHostApis()) {
-            t.traceBegin("StartAiSealSystemService");
-            try {
-                mSystemServiceManager.startService(AiSealSystemService.class);
-            } finally {
-                t.traceEnd();
-            }
         }
 
         // Profiling
