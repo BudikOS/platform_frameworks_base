@@ -18,6 +18,8 @@ package {
 
 genrule {
     name: "aiseal_test_odim_version",
+    // the aiseal payload is not built on the gsi
+    enabled: false,
     device_first_srcs: [
         "//frameworks/base/tests/aiseal/tenants/odim:AiSealTestHelperAppOdim",
     ],
@@ -28,6 +30,8 @@ genrule {
 
 genrule {
     name: "aiseal_test_odim_expected_authority",
+    // the aiseal payload is not built on the gsi
+    enabled: false,
     device_first_srcs: [
         "//frameworks/base/tests/aiseal/tenants/odim:AiSealTestHelperAppOdim",
     ],
@@ -39,6 +43,8 @@ genrule {
 
 genrule {
     name: "aiseal_test_vm_config_json",
+    // the aiseal payload is not built on the gsi
+    enabled: false,
     srcs: [
         "assets/vm_config.json",
         ":aiseal_test_odim_expected_authority",
@@ -51,6 +57,8 @@ genrule {
 
 genrule {
     name: "aiseal_test_aiseal_config_json",
+    // the aiseal payload is not built on the gsi
+    enabled: false,
     srcs: ["assets/aiseal_config.json"],
     out: ["aiseal_config.json"],
     cmd: "cp -f $(in) $(out)",
@@ -58,6 +66,8 @@ genrule {
 
 android_test_helper_app {
     name: "AiSealTestTenantConfig",
+    // the aiseal payload is not built on the gsi
+    enabled: false,
     asset_dirs: [],
     assets: [
         ":aiseal_test_vm_config_json",

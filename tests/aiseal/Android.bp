@@ -21,6 +21,8 @@ filegroup {
 
 android_test {
     name: "AiSealTestCases",
+    // the aiseal payload is not built on the gsi
+    enabled: false,
     team: "trendy_team_machine_learning",
     srcs: ["src/**/*.java"],
     platform_apis: true,

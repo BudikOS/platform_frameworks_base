@@ -34,6 +34,8 @@ aidl_interface {
 rust_ffi {
     name: "libtest_aiseal_odim_payload",
     crate_name: "test_aiseal_odim_payload",
+    // the virtualization stack is not built on the gsi
+    enabled: false,
     srcs: ["native/main.rs"],
     edition: "2021",
     prefer_rlib: true,
@@ -50,6 +52,8 @@ rust_ffi {
 
 android_test_helper_app {
     name: "AiSealTestHelperAppOdim",
+    // the aiseal payload is not built on the gsi
+    enabled: false,
     srcs: ["java/**/*.java"],
     platform_apis: true,
     certificate: "platform",
