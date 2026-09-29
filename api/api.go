@@ -46,7 +46,8 @@ var core_libraries_modules = []string{art, conscrypt, i18n}
 // APIs.
 // In addition, the modules in this list are allowed to contribute to test APIs
 // stubs.
-var non_updatable_modules = []string{virtualization, location, platformCrashrecovery, ondeviceintelligence, platformTelephony}
+// the virtualization module is not built on the gsi, so it is excluded
+var non_updatable_modules = []string{location, platformCrashrecovery, ondeviceintelligence, platformTelephony}
 
 // Map of RELEASE_ flags and the module associated with the flag.
 type moduleFlagInfo struct {
