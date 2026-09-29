@@ -288,7 +288,6 @@ java_library_static {
         "vendor.samsung.hardware.biometrics.fingerprint-V1-java",
         "vendor.samsung.hardware.light-V1-java",
         "aconfig_adbdauth_flags_java_lib",
-        "AvfBuildFlags",
         "textclassifier_flags_lib",
         "lights_flags_lib",
         "android.bpfprogs.flags-aconfig-java",
