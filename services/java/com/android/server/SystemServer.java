@@ -491,10 +491,6 @@ public final class SystemServer implements Dumpable {
     private static final String UPROBESTATS_BRIDGE_SERVICE_CLASS =
             "com.android.uprobestats.UprobeStatsBridgeService";
 
-    private static final String RANGING_APEX_SERVICE_JAR_PATH =
-            "/apex/com.android.uwb/javalib/service-ranging.jar";
-    private static final String RANGING_SERVICE_CLASS = "com.android.server.ranging.RangingService";
-
     private static final String TETHERING_CONNECTOR_CLASS = "android.net.ITetheringConnector";
 
     private static final String DEVICE_TO_DEVICE_SERVICE_CLASS =
@@ -3292,19 +3288,6 @@ public final class SystemServer implements Dumpable {
             t.traceEnd();
         }
 
-        if (com.android.ranging.flags.Flags.rangingStackEnabled()) {
-            if (context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_UWB)
-                    || context.getPackageManager().hasSystemFeature(
-                            PackageManager.FEATURE_WIFI_AWARE)
-                    || (com.android.ranging.flags.Flags.rangingCsEnabled()
-                            && context.getPackageManager().hasSystemFeature(
-                                    PackageManager.FEATURE_BLUETOOTH_LE))) {
-                t.traceBegin("RangingService");
-                mSystemServiceManager.startServiceFromJar(RANGING_SERVICE_CLASS,
-                        RANGING_APEX_SERVICE_JAR_PATH);
-                t.traceEnd();
-            }
-        }
 
         t.traceBegin("StartBootPhaseDeviceSpecificServicesReady");
         mSystemServiceManager.startBootPhase(t, SystemService.PHASE_DEVICE_SPECIFIC_SERVICES_READY);
