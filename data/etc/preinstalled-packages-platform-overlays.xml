@@ -41,6 +41,12 @@
     <install-in-user-type package="com.android.internal.systemui.navbar.gestural">
         <install-in user-type="FULL" />
     </install-in-user-type>
+    <install-in-user-type package="com.android.internal.systemui.navbar.gestural_nohandle">
+        <install-in user-type="FULL" />
+    </install-in-user-type>
+    <install-in-user-type package="com.android.internal.systemui.navbar.gestural_nohandle.launcher">
+        <install-in user-type="FULL" />
+    </install-in-user-type>
     <install-in-user-type package="com.android.internal.systemui.navbar.gestural_extra_wide_back">
         <install-in user-type="FULL" />
     </install-in-user-type>
