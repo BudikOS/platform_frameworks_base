@@ -4113,6 +4113,11 @@ public class KeyguardUpdateMonitor implements TrustManager.TrustListener, CoreSt
         clearFingerprintRecognized(unlockedUser);
     }
 
+    void abandonSecondFactor() {
+        clearFingerprintRecognized();
+        updateFingerprintListeningState(BIOMETRIC_ACTION_UPDATE);
+    }
+
     protected void clearFingerprintRecognized(int unlockedUser) {
         Assert.isMainThread();
         mUserFingerprintAuthenticated.clear();

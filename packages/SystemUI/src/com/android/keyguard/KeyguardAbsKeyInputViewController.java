@@ -225,10 +225,12 @@ public abstract class KeyguardAbsKeyInputViewController<T extends KeyguardAbsKey
                         KeyguardUpdateMonitor.getAndRemovePendingSecondFactorAction(userId);
                 if (pendingAction == null) {
                     Log.e(BSF_TAG, "no PendingSecondFactorAction");
+                    abandonSecondFactor();
                     return;
                 }
                 if (!pendingAction.getAsBoolean()) {
                     Log.e(BSF_TAG, "PendingSecondFactorAction returned false");
+                    abandonSecondFactor();
                     return;
                 }
             }
@@ -268,6 +270,11 @@ public abstract class KeyguardAbsKeyInputViewController<T extends KeyguardAbsKey
             }
             startErrorAnimation();
         }
+    }
+
+    private void abandonSecondFactor() {
+        mKeyguardUpdateMonitor.abandonSecondFactor();
+        getKeyguardSecurityCallback().showCurrentSecurityScreen();
     }
 
     protected void startErrorAnimation() { /* no-op */ }
