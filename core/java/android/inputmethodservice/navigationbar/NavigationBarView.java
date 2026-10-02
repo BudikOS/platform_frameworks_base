@@ -67,6 +67,7 @@ public final class NavigationBarView extends FrameLayout {
     int mDisabledFlags = 0;
     @NavbarFlags
     private int mNavbarFlags;
+    private boolean mBackButtonHidden;
     private final int mNavBarMode = NAV_BAR_MODE_GESTURAL;
 
     private KeyButtonDrawable mBackIcon;
@@ -275,6 +276,14 @@ public final class NavigationBarView extends FrameLayout {
         super.setLayoutDirection(layoutDirection);
     }
 
+    public void setBackButtonHidden(boolean hidden) {
+        if (hidden == mBackButtonHidden) {
+            return;
+        }
+        mBackButtonHidden = hidden;
+        updateNavButtonIcons();
+    }
+
     /**
      * Sets the navigation bar state flags.
      *
@@ -316,7 +325,7 @@ public final class NavigationBarView extends FrameLayout {
         getImeSwitchButton()
                 .setVisibility(isImeSwitcherButtonVisible ? View.VISIBLE : View.INVISIBLE);
 
-        getBackButton().setVisibility(View.VISIBLE);
+        getBackButton().setVisibility(mBackButtonHidden ? View.INVISIBLE : View.VISIBLE);
         getHomeHandle().setVisibility(View.INVISIBLE);
 
         // We used to be reporting the touch regions via notifyActiveTouchRegions() here.

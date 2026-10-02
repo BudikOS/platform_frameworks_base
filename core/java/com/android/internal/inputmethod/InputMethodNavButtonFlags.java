@@ -32,6 +32,7 @@ import java.lang.annotation.Retention;
         InputMethodNavButtonFlags.IME_DRAWS_IME_NAV_BAR,
         InputMethodNavButtonFlags.SHOW_IME_SWITCHER_BUTTON,
         InputMethodNavButtonFlags.IME_SWITCHER_BUTTON_ENABLED,
+        InputMethodNavButtonFlags.IME_BACK_BUTTON_HIDDEN,
 })
 public @interface InputMethodNavButtonFlags {
 
@@ -54,4 +55,9 @@ public @interface InputMethodNavButtonFlags {
      * from {@link #SHOW_IME_SWITCHER_BUTTON}.
      */
     int IME_SWITCHER_BUTTON_ENABLED = 1 << 2;
+
+    /**
+     * When set, the IME back (dismiss) button is not shown on the IME Navigation bar.
+     */
+    int IME_BACK_BUTTON_HIDDEN = 1 << 3;
 }

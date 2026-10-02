@@ -8520,6 +8520,15 @@ public final class Settings {
                 "ime_switcher_in_navbar_enabled";
 
         /**
+         * Toggle for showing the IME back (dismiss) button in the IME navigation bar.
+         *
+         * @hide
+         */
+        @Readable
+        public static final String IME_BACK_BUTTON_IN_NAVBAR_ENABLED =
+                "ime_back_in_navbar_enabled";
+
+        /**
          * Default value for {@link #STYLUS_HANDWRITING_ENABLED}.
          *
          * @hide

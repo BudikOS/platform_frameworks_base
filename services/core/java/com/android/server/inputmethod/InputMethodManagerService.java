@@ -815,7 +815,8 @@ public final class InputMethodManagerService implements IInputMethodManagerImpl.
                 updateInputMethodsFromSettingsLocked(enabledChanged, userId);
                 break;
             }
-            case Settings.Secure.IME_SWITCHER_BUTTON_IN_NAVBAR_ENABLED: {
+            case Settings.Secure.IME_SWITCHER_BUTTON_IN_NAVBAR_ENABLED:
+            case Settings.Secure.IME_BACK_BUTTON_IN_NAVBAR_ENABLED: {
                 final var userData = getUserData(userId);
                 updateSystemUiLocked(userId);
                 sendOnNavButtonFlagsChangedLocked(userData);
@@ -1686,6 +1687,7 @@ public final class InputMethodManagerService implements IInputMethodManagerImpl.
                                 Settings.Secure.SELECTED_INPUT_METHOD_SUBTYPE,
                                 Settings.Secure.STYLUS_HANDWRITING_ENABLED,
                                 Settings.Secure.IME_SWITCHER_BUTTON_IN_NAVBAR_ENABLED,
+                                Settings.Secure.IME_BACK_BUTTON_IN_NAVBAR_ENABLED,
                         }, (key, flags, userId) -> {
                             synchronized (ImfLock.class) {
                                 onSecureSettingsChangedLocked(key, userId);
@@ -2876,11 +2878,16 @@ public final class InputMethodManagerService implements IInputMethodManagerImpl.
         final boolean isImeSwitcherButtonInNavbarEnabled =
                 !Flags.imeSwitcherButtonInNavbarSetting() || InputMethodSettingsRepository.get(
                         userId).isImeSwitcherButtonInNavBarEnabled();
+        final boolean isImeBackButtonInNavbarEnabled =
+                InputMethodSettingsRepository.get(userId).isImeBackButtonInNavBarEnabled();
         return (imeDrawsImeNavBar ? InputMethodNavButtonFlags.IME_DRAWS_IME_NAV_BAR : 0)
                 | (showImeSwitcherButton ? InputMethodNavButtonFlags.SHOW_IME_SWITCHER_BUTTON : 0)
                 | (isImeSwitcherButtonInNavbarEnabled
                 ? InputMethodNavButtonFlags.IME_SWITCHER_BUTTON_ENABLED
-                : 0);
+                : 0)
+                | (isImeBackButtonInNavbarEnabled
+                ? 0
+                : InputMethodNavButtonFlags.IME_BACK_BUTTON_HIDDEN);
     }
 
     /**

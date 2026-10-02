@@ -664,6 +664,10 @@ final class InputMethodSettings {
         return getInt(Settings.Secure.IME_SWITCHER_BUTTON_IN_NAVBAR_ENABLED, 1) == 1;
     }
 
+    boolean isImeBackButtonInNavBarEnabled() {
+        return getInt(Settings.Secure.IME_BACK_BUTTON_IN_NAVBAR_ENABLED, 1) == 1;
+    }
+
     void dump(final Printer pw, final String prefix) {
         pw.println(prefix + "mUserId=" + mUserId);
     }
