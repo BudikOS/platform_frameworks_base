@@ -82,8 +82,7 @@ public class BrightnessUtils {
      */
     public static final float convertGammaToLinearFloat(int val, float min, float max) {
         if (SystemProperties.getBoolean("persist.sys.phh.linear_brightness", false)) {
-            android.util.Log.e("PHH", "Linear brightness val " + val + " from " + min + " to " + max + " makes " + (val / 65536.0f));
-            return val / 65536.0f;
+            return MathUtils.lerp(min, max, MathUtils.norm(GAMMA_SPACE_MIN, GAMMA_SPACE_MAX, val));
         }
         final float normalizedVal = MathUtils.norm(GAMMA_SPACE_MIN, GAMMA_SPACE_MAX, val);
         final float ret;
@@ -136,6 +135,10 @@ public class BrightnessUtils {
      * @return The corresponding slider value
      */
     public static final int convertLinearToGammaFloat(float val, float min, float max) {
+        if (SystemProperties.getBoolean("persist.sys.phh.linear_brightness", false)) {
+            return Math.round(MathUtils.lerp(GAMMA_SPACE_MIN, GAMMA_SPACE_MAX,
+                    MathUtils.constrain(MathUtils.norm(min, max, val), 0f, 1f)));
+        }
         // For some reason, HLG normalizes to the range [0, 12] rather than [0, 1]
         final float normalizedVal = MathUtils.norm(min, max, val) * 12;
         final float ret;
