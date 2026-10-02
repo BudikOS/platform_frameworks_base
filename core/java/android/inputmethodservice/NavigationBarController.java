@@ -418,14 +418,15 @@ final class NavigationBarController implements Window.DecorCallback,
 
         final boolean prevShowImeSwitcherButtonInNavBar = showImeSwitcherButtonInNavBar();
         final boolean prevImeBackButtonHidden = mImeBackButtonHidden;
-        mImeDrawsImeNavBar =
-                (navButtonFlags & InputMethodNavButtonFlags.IME_DRAWS_IME_NAV_BAR) != 0;
         mShowImeSwitcherButton =
                 (navButtonFlags & InputMethodNavButtonFlags.SHOW_IME_SWITCHER_BUTTON) != 0;
         mImeSwitcherButtonEnabled =
                 (navButtonFlags & InputMethodNavButtonFlags.IME_SWITCHER_BUTTON_ENABLED) != 0;
         mImeBackButtonHidden =
                 (navButtonFlags & InputMethodNavButtonFlags.IME_BACK_BUTTON_HIDDEN) != 0;
+        mImeDrawsImeNavBar =
+                (navButtonFlags & InputMethodNavButtonFlags.IME_DRAWS_IME_NAV_BAR) != 0
+                && (!mImeBackButtonHidden || showImeSwitcherButtonInNavBar());
 
         mService.mWindow.getWindow().getDecorView().getWindowInsetsController()
                 .setImeCaptionBarInsetsHeight(getImeCaptionBarHeight(mImeDrawsImeNavBar));
