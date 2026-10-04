@@ -44,14 +44,17 @@ constructor(
             when (action) {
                 is QSTileUserAction.Click -> {
                     if (FlashlightStrength.isEnabled) {
-                        if (
-                            !ActivityManager.isUserAMonkey() &&
-                                input.data is FlashlightModel.Available.Level
-                        ) {
-                            // Note: no Click response for Binary state. See ToggleClick.
-                            flashlightInteractor.get().setEnabled(true)
-                            // the ui code runs on the main thread
-                            flashlightDialogDelegate.get().showDialog(input.action.expandable)
+                        if (!ActivityManager.isUserAMonkey()) {
+                            val data = input.data
+                            if (data is FlashlightModel.Available.Level && !data.enabled) {
+                                flashlightInteractor.get().setEnabled(true)
+                                // the ui code runs on the main thread
+                                flashlightDialogDelegate.get().showDialog(input.action.expandable)
+                            } else if (data is FlashlightModel.Available) {
+                                // binary flashlights only ever receive Click, the tile never
+                                // advertises ToggleClick for them, so toggle here as well
+                                flashlightInteractor.get().setEnabled(!data.enabled)
+                            }
                         }
                     } else { // preserve old behavior at the cost of some redundancy
                         if (
