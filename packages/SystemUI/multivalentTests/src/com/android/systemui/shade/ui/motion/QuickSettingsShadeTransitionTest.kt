@@ -83,6 +83,7 @@ import platform.test.motion.compose.runTest
 import platform.test.motion.golden.dataPointType
 import platform.test.screenshot.DeviceEmulationSpec
 import platform.test.screenshot.Displays.Phone
+import com.android.systemui.statusbar.policy.batteryController
 
 @Ignore("b/496045082")
 @RunWith(AndroidJUnit4::class)
@@ -119,6 +120,7 @@ class QuickSettingsShadeTransitionTest() : SysuiTestCase() {
             notificationStackScrollView = { notificationScrollView },
             notificationsPlaceholderViewModelFactory =
                 kosmos.notificationsPlaceholderViewModelFactory,
+            batteryController = kosmos.batteryController,
         )
 
     private val goneScene =

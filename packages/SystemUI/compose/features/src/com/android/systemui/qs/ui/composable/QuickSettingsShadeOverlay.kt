@@ -45,6 +45,7 @@ import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -116,6 +117,7 @@ import com.android.systemui.statusbar.notification.stack.shared.model.ShadeScrim
 import com.android.systemui.statusbar.notification.stack.shared.model.ShadeScrimShape
 import com.android.systemui.statusbar.notification.stack.ui.view.NotificationScrollView
 import com.android.systemui.statusbar.notification.stack.ui.viewmodel.NotificationsPlaceholderViewModel
+import com.android.systemui.statusbar.policy.BatteryController
 import com.android.systemui.volume.panel.component.volume.slider.ui.viewmodel.AudioStreamSliderViewModel
 import com.android.systemui.volume.panel.component.volume.ui.composable.VolumeSlider
 import com.android.systemui.volume.panel.component.volume.ui.composable.VolumeSliderDimensions
@@ -133,6 +135,7 @@ constructor(
     private val quickSettingsContainerViewModelFactory: QuickSettingsContainerViewModel.Factory,
     private val notificationStackScrollView: Lazy<NotificationScrollView>,
     private val notificationsPlaceholderViewModelFactory: NotificationsPlaceholderViewModel.Factory,
+    private val batteryController: BatteryController,
 ) : Overlay {
 
     override val key = Overlays.QuickSettingsShade
@@ -156,7 +159,8 @@ constructor(
             rememberViewModel("QuickSettingsShadeOverlayContent", key = coroutineScope) {
                 contentViewModelFactory.create(coroutineScope)
             }
-        val useBrightnessMirrorInOverlay = useBrightnessMirrorInOverlay()
+        // Budík: the segmented brightness slider stays in the panel, no mirror.
+        val useBrightnessMirrorInOverlay = false
         val quickSettingsContainerViewModel =
             rememberViewModel("QuickSettingsShadeOverlayContainer") {
                 quickSettingsContainerViewModelFactory.create(
@@ -191,6 +195,22 @@ constructor(
         }
 
         LaunchedEffectWithLifecycle(key1 = Unit) { contentViewModel.detectShadeModeChanges() }
+
+        val batteryLevel by
+            produceState<Int?>(null, batteryController) {
+                val callback =
+                    object : BatteryController.BatteryStateChangeCallback {
+                        override fun onBatteryLevelChanged(
+                            level: Int,
+                            pluggedIn: Boolean,
+                            charging: Boolean,
+                        ) {
+                            value = level
+                        }
+                    }
+                batteryController.addCallback(callback)
+                awaitDispose { batteryController.removeCallback(callback) }
+            }
 
         Box(
             modifier =
@@ -231,6 +251,7 @@ constructor(
                 QuickSettingsContainer(
                     contentViewModel = contentViewModel,
                     containerViewModel = quickSettingsContainerViewModel,
+                    batteryLevel = batteryLevel,
                 )
             }
             SnoozableHeadsUpNotificationPlaceholder(
@@ -263,6 +284,7 @@ private fun useBrightnessMirrorInOverlay(): Boolean {
 private fun ContentScope.QuickSettingsContainer(
     contentViewModel: QuickSettingsShadeOverlayContentViewModel,
     containerViewModel: QuickSettingsContainerViewModel,
+    batteryLevel: Int?,
     modifier: Modifier = Modifier,
 ) {
     val isEditing by containerViewModel.editModeViewModel.isEditing.collectAsStateWithLifecycle()
@@ -326,15 +348,20 @@ private fun ContentScope.QuickSettingsContainer(
             }
 
             ShadeBodyState.Default -> {
-                QuickSettingsLayout(
-                    qsContainerViewModel = containerViewModel,
-                    toolbarViewModelFactory = contentViewModel.toolbarViewModelFactory,
-                    buildNumberViewModelFactory = contentViewModel.buildNumberViewModelFactory,
-                    isTransparencyEnabled = contentViewModel.isTransparencyEnabled,
-                    volumeSliderViewModel = contentViewModel.volumeSliderViewModel,
-                    audioDetailsViewModelFactory = contentViewModel.audioDetailsViewModelFactory,
-                    modifier = modifier.sysuiResTag("quick_settings_panel"),
-                )
+                // Budík: own control centre instead of QuickSettingsLayout.
+                Column(modifier = modifier.sysuiResTag("quick_settings_panel")) {
+                    QuickSettingsOverlayPrivacyChip(
+                        containerViewModel.shadeHeaderViewModel,
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    BudikControlCenter(
+                        containerViewModel = containerViewModel,
+                        toolbarViewModelFactory = contentViewModel.toolbarViewModelFactory,
+                        batteryLevel = batteryLevel,
+                        onDone = contentViewModel::onScrimClicked,
+                    )
+                }
             }
         }
     }

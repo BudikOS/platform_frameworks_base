@@ -62,6 +62,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import com.android.systemui.statusbar.policy.batteryController
 
 @SmallTest
 @RunWith(AndroidJUnit4::class)
@@ -106,6 +107,7 @@ class MediaInQuickSettingsTest : SysuiTestCase() {
             notificationStackScrollView = { kosmos.notificationScrollView },
             notificationsPlaceholderViewModelFactory =
                 kosmos.notificationsPlaceholderViewModelFactory,
+            batteryController = kosmos.batteryController,
         )
 
     @Before

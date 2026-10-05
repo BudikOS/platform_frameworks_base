@@ -21,6 +21,7 @@ import com.android.systemui.qs.ui.viewmodel.quickSettingsShadeOverlayActionsView
 import com.android.systemui.qs.ui.viewmodel.quickSettingsShadeOverlayContentViewModelFactory
 import com.android.systemui.statusbar.notification.stack.ui.view.notificationScrollView
 import com.android.systemui.statusbar.notification.stack.ui.viewmodel.notificationsPlaceholderViewModelFactory
+import com.android.systemui.statusbar.policy.batteryController
 
 val Kosmos.quickSettingsShadeOverlay by
     Kosmos.Fixture {
@@ -30,5 +31,6 @@ val Kosmos.quickSettingsShadeOverlay by
             quickSettingsContainerViewModelFactory = quickSettingsContainerViewModelFactory,
             notificationStackScrollView = { notificationScrollView },
             notificationsPlaceholderViewModelFactory = notificationsPlaceholderViewModelFactory,
+            batteryController = batteryController,
         )
     }
