@@ -53,6 +53,7 @@ import com.android.mechanics.behavior.VerticalExpandContainerSpec
 import com.android.mechanics.behavior.verticalExpandContainerBackground
 import com.android.mechanics.compose.modifier.motionDriver
 import com.android.systemui.qs.ui.composable.TileRevealFlag
+import com.android.systemui.budik.ui.compose.Budik
 import com.android.systemui.res.R
 import com.android.systemui.scene.ui.composable.LocalSceneContainerPreloadedResources
 import com.android.systemui.shade.ui.ShadeColors.shadePanel
@@ -233,13 +234,8 @@ object OverlayShade {
         @Composable
         @ReadOnlyComposable
         fun panelBackground(transparencyEnabled: Boolean): Color {
-            return Color(
-                shadePanel(
-                    context = LocalContext.current,
-                    blurSupported = transparencyEnabled,
-                    withScrim = false,
-                )
-            )
+            // Budík: opaque bg token (#F5F6F7 / #0E0F11), no translucent blur colour.
+            return Budik.colors.bg
         }
     }
 
