@@ -58,12 +58,9 @@ public class CarrierText extends TextView {
     @Override
     protected void onVisibilityChanged(View changedView, int visibility) {
         super.onVisibilityChanged(changedView, visibility);
-        // Only show marquee when visible
-        if (visibility == VISIBLE) {
-            setEllipsize(TextUtils.TruncateAt.MARQUEE);
-        } else {
-            setEllipsize(TextUtils.TruncateAt.END);
-        }
+        // Budik: no marquee. A scrolling carrier label redraws the whole shade window every
+        // frame while the keyguard is shown (notable CPU/GPU cost on low-end devices).
+        setEllipsize(TextUtils.TruncateAt.END);
     }
 
     @Override
