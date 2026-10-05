@@ -588,7 +588,9 @@ public class CentralSurfacesImplTest extends SysuiTestCase {
                 mQuickAccessWalletController,
                 mWindowManager,
                 mWindowManagerProvider,
-                mock(SessionTracker.class)
+                mock(SessionTracker.class),
+                mContext,
+                () -> configurationController
         );
         mScreenLifecycle.addObserver(mCentralSurfaces.mScreenObserver);
         mCentralSurfaces.initShadeVisibilityListener();

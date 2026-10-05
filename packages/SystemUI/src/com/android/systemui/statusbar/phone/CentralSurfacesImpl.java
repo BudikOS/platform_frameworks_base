@@ -154,6 +154,7 @@ import com.android.systemui.shade.NotificationShadeWindowView;
 import com.android.systemui.shade.NotificationShadeWindowViewController;
 import com.android.systemui.shade.QuickSettingsController;
 import com.android.systemui.shade.ShadeController;
+import com.android.systemui.shade.ShadeDisplayAware;
 import com.android.systemui.shade.ShadeExpansionChangeEvent;
 import com.android.systemui.shade.ShadeExpansionListener;
 import com.android.systemui.shade.ShadeExpansionStateManager;
@@ -365,6 +366,8 @@ public class CentralSurfacesImpl implements CoreStartable, CentralSurfaces {
     private final FalsingManager mFalsingManager;
     private final BroadcastDispatcher mBroadcastDispatcher;
     private final ConfigurationController mConfigurationController;
+    private final Context mShadeContext;
+    private final Lazy<ConfigurationController> mShadeConfigurationControllerLazy;
     private final Lazy<NotificationShadeWindowViewController>
             mNotificationShadeWindowViewControllerLazy;
     private final DozeParameters mDozeParameters;
@@ -612,9 +615,13 @@ public class CentralSurfacesImpl implements CoreStartable, CentralSurfaces {
             QuickAccessWalletController walletController,
             WindowManager windowManager,
             WindowManagerProvider windowManagerProvider,
-            SessionTracker sessionTracker
+            SessionTracker sessionTracker,
+            @ShadeDisplayAware Context shadeContext,
+            @ShadeDisplayAware Lazy<ConfigurationController> shadeConfigurationControllerLazy
     ) {
         mContext = context;
+        mShadeContext = shadeContext;
+        mShadeConfigurationControllerLazy = shadeConfigurationControllerLazy;
         mNotificationsController = notificationsController;
         mFragmentService = fragmentService;
         mLightBarController = lightBarController;
@@ -1945,6 +1952,13 @@ public class CentralSurfacesImpl implements CoreStartable, CentralSurfaces {
         if (mContext.getThemeResId() != themeResId) {
             mContext.setTheme(themeResId);
             mConfigurationController.notifyThemeChanged();
+        }
+        // The shade window (keyguard status bar, indication text...) inflates from its own
+        // @ShadeDisplayAware context, which is created with a fixed Theme_SystemUI. Keep it in
+        // sync, otherwise lockscreen icons stay white on a light wallpaper.
+        if (mShadeContext != mContext && mShadeContext.getThemeResId() != themeResId) {
+            mShadeContext.setTheme(themeResId);
+            mShadeConfigurationControllerLazy.get().notifyThemeChanged();
         }
     }
 
