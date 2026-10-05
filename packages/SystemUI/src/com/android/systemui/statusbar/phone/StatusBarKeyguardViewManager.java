@@ -877,15 +877,15 @@ public class StatusBarKeyguardViewManager implements RemoteInputController.Callb
                     mPrimaryBouncerInteractor.show(scrimmed, reason);
                 }
             } else {
-                if (SceneContainerFlag.isEnabled()) {
-                    throw new IllegalStateException(
-                            "Handle SceneContainerFlag in SBKVM#showPrimaryBouncer!");
+                // With the scene container the Compose bouncer is already up and re-reads the
+                // security mode itself, nothing to re-request (same as upstream).
+                if (!SceneContainerFlag.isEnabled()) {
+                    // This will either dismiss the Keyguard (if KUM#getUserCanSkipBouncer is
+                    // true) or display the appropriate SecurityMode in KSCC. These are the same
+                    // outcomes that a caller can expect when calling #showPrimaryBouncer while
+                    // the bouncer is not showing.
+                    mPrimaryBouncerInteractor.notifyBouncerRequestedWhenAlreadyShowing();
                 }
-                // This will either dismiss the Keyguard (if KUM#getUserCanSkipBouncer is true) or
-                // display the appropriate SecurityMode in KSCC. These are the same outcomes that
-                // a caller can expect when calling #showPrimaryBouncer while the bouncer is not
-                // showing.
-                mPrimaryBouncerInteractor.notifyBouncerRequestedWhenAlreadyShowing();
             }
         }
         updateStates();

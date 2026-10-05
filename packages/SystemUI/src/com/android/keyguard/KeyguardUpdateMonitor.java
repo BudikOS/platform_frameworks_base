@@ -3293,7 +3293,10 @@ public class KeyguardUpdateMonitor implements TrustManager.TrustListener, CoreSt
 
         boolean shouldListen = shouldListenKeyguardState && shouldListenUserState
                 && shouldListenBouncerState && shouldListenUdfpsState && !mBiometricPromptShowing
-                && shouldListenSecureLockDeviceState;
+                && shouldListenSecureLockDeviceState
+                // Second factor UI exists only in the legacy bouncer. With the scene container the
+                // user unlocks with the primary credential instead of fingerprint + second factor.
+                && !(SceneContainerFlag.isEnabled() && biometricSecondFactorEnabled);
         logListenerModelData(
                 new KeyguardFingerprintListenModel(
                     System.currentTimeMillis(),

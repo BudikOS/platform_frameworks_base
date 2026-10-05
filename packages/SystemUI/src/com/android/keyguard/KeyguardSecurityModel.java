@@ -27,6 +27,7 @@ import com.android.internal.widget.LockDomain;
 import com.android.internal.widget.LockPatternUtils;
 import com.android.systemui.dagger.SysUISingleton;
 import com.android.systemui.dagger.qualifiers.Main;
+import com.android.systemui.scene.shared.flag.SceneContainerFlag;
 import com.android.systemui.securelockdevice.domain.interactor.SecureLockDeviceInteractor;
 import com.android.systemui.util.kotlin.JavaAdapter;
 
@@ -134,7 +135,9 @@ public class KeyguardSecurityModel {
             return SecurityMode.SimPin;
         }
 
-        if (lockDomain == Secondary &&
+        // The Compose bouncer (scene container) has no second factor UI: fingerprint is not
+        // offered for keyguard there when the second factor is enabled, see KeyguardUpdateMonitor.
+        if (lockDomain == Secondary && !SceneContainerFlag.isEnabled() &&
                 mKeyguardUpdateMonitor.getUserAuthenticatedWithFingerprint(userId) &&
                 mKeyguardUpdateMonitor.isUnlockingWithFingerprintAllowedSafe() &&
                 mLockPatternUtils.isBiometricSecondFactorEnabled(userId)) {
