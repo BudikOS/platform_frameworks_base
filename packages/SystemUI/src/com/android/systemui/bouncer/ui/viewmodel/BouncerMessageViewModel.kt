@@ -16,12 +16,14 @@
 
 package com.android.systemui.bouncer.ui.viewmodel
 
+import android.app.ActivityManager
 import android.content.Context
 import android.security.Flags.lockscreenLargerTimeoutTimeUnits
 import android.security.Flags.secureLockDevice
 import android.util.PluralsMessageFormatter
 import android.view.accessibility.AccessibilityManager.FLAG_CONTENT_TEXT
 import com.android.app.tracing.coroutines.launchTraced as launch
+import com.android.internal.widget.LockPatternUtils
 import com.android.systemui.accessibility.domain.interactor.AccessibilityInteractor
 import com.android.systemui.authentication.domain.interactor.AuthenticationInteractor
 import com.android.systemui.authentication.shared.model.AuthenticationMethodModel
@@ -463,7 +465,22 @@ constructor(
                     isFingerprintAllowedOnBouncer,
                 )
             else -> BouncerMessageStrings.defaultMessage(authMethod, isFingerprintAllowedOnBouncer)
-        }.toMessage()
+        }.toMessage().withSecondFactorNotice()
+    }
+
+    private val lockPatternUtils by lazy { LockPatternUtils(applicationContext) }
+
+    /**
+     * GrapheneOS's fingerprint second factor has no UI in the Compose bouncer, so keyguard
+     * fingerprint is off while it is enabled (see KeyguardUpdateMonitor). Say so instead of
+     * silently ignoring the finger.
+     */
+    private fun MessageViewModel.withSecondFactorNotice(): MessageViewModel {
+        if (!secondaryText.isNullOrEmpty()) return this
+        if (!lockPatternUtils.isBiometricSecondFactorEnabled(ActivityManager.getCurrentUser())) {
+            return this
+        }
+        return copy(secondaryText = SECOND_FACTOR_NOTICE)
     }
 
     private fun BouncerMessagePair.toMessage(): MessageViewModel {
@@ -535,6 +552,10 @@ constructor(
     }
 
     companion object {
+        // Budík OS: Czech only for now, like the other Budík shade texts.
+        private const val SECOND_FACTOR_NOTICE =
+            "Otisk prstu je s druhým faktorem vypnutý – odemkněte PINem, heslem nebo vzorem"
+
         val DEFAULT_MESSAGE_DURATION = 2.seconds
     }
 }
