@@ -20,6 +20,7 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -63,6 +64,11 @@ import com.android.systemui.scene.ui.composable.Overlay
 import com.android.systemui.shade.ui.composable.ChipHighlightModel
 import com.android.systemui.shade.ui.composable.OverlayShade
 import com.android.systemui.shade.ui.composable.OverlayShadeHeader
+import com.android.systemui.plugins.ActivityStarter
+import com.android.systemui.statusbar.NotificationClickNotifier
+import com.android.systemui.statusbar.notification.collection.NotifPipeline
+import com.android.systemui.statusbar.notification.data.repository.ActiveNotificationListRepository
+import com.android.systemui.statusbar.notification.row.OnUserInteractionCallback
 import com.android.systemui.statusbar.notification.stack.ui.view.NotificationScrollView
 import dagger.Lazy
 import javax.inject.Inject
@@ -79,7 +85,22 @@ constructor(
     private val shadeSession: SaveableSession,
     private val stackScrollView: Lazy<NotificationScrollView>,
     private val jankMonitor: InteractionJankMonitor,
+    activeNotificationListRepository: ActiveNotificationListRepository,
+    notifPipeline: Lazy<NotifPipeline>,
+    onUserInteractionCallback: Lazy<OnUserInteractionCallback>,
+    activityStarter: Lazy<ActivityStarter>,
+    notificationClickNotifier: Lazy<NotificationClickNotifier>,
 ) : Overlay {
+    private val budikActions =
+        BudikNotificationActions(
+            repository = activeNotificationListRepository,
+            notifPipeline = notifPipeline,
+            onUserInteractionCallback = onUserInteractionCallback,
+            activityStarter = activityStarter,
+            clickNotifier = notificationClickNotifier,
+            stackScrollView = stackScrollView,
+        )
+
     override val key = Overlays.NotificationsShade
 
     private val actionsViewModel: NotificationsShadeOverlayActionsViewModel by lazy {
@@ -172,23 +193,29 @@ constructor(
                         paneTitle = accessibilityTitle
                     }
             ) {
-                if (isFullWidth) {
-                    Box(
-                        Modifier.padding(
-                            start = notificationStackPadding,
-                            end = notificationStackPadding,
-                            bottom = 8.dp,
-                        )
+                // Budík: large clock + date, media, then the receipt card. The notification stack
+                // keeps a zero-height placeholder below so its lifecycle (expansion, HUNs, clear
+                // all) works as in AOSP while the rows themselves are not shown.
+                BudikShadeClock(Modifier.padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 12.dp))
+                if (viewModel.showMedia) {
+                    Element(
+                        key = Media.Elements.MediaCarousel,
+                        modifier = Modifier.padding(horizontal = 12.dp).padding(bottom = 12.dp),
                     ) {
-                        with(lockscreenElements) {
-                            LockscreenElement(
-                                LockscreenElementKeys.Clock.Small,
-                                Modifier.height(88.dp),
-                            )
-                        }
+                        Media(
+                            viewModelFactory = viewModel.mediaViewModelFactory,
+                            presentationStyle = MediaPresentationStyle.Default,
+                            behavior = viewModel.mediaUiBehavior,
+                            onDismissed = viewModel::onMediaSwipeToDismiss,
+                            location = Media.Location.SHADE,
+                        )
                     }
                 }
-
+                BudikNotificationReceipt(
+                    actions = budikActions,
+                    modifier = Modifier.padding(horizontal = 12.dp),
+                )
+                Spacer(Modifier.height(12.dp))
                 val stackScrollView = stackScrollView.get()
                 ScrollingNotificationPanel(
                     tag = "NotifShadeOverlay",
@@ -201,25 +228,10 @@ constructor(
                     isTransparencyEnabled = viewModel.isTransparencyEnabled,
                     stackTopPadding = notificationStackPadding,
                     stackBottomPadding = { notificationStackPadding },
-                    aboveNotifications = { modifier ->
-                        if (viewModel.showMedia) {
-                            Element(
-                                key = Media.Elements.MediaCarousel,
-                                modifier = modifier.padding(horizontal = notificationStackPadding),
-                            ) {
-                                Media(
-                                    viewModelFactory = viewModel.mediaViewModelFactory,
-                                    presentationStyle = MediaPresentationStyle.Default,
-                                    behavior = viewModel.mediaUiBehavior,
-                                    onDismissed = viewModel::onMediaSwipeToDismiss,
-                                    location = Media.Location.SHADE,
-                                )
-                            }
-                        }
-                    },
+                    aboveNotifications = {},
                     shouldDrawScrimBackground = false,
                     modifier =
-                        Modifier.fillMaxWidth().focusProperties {
+                        Modifier.fillMaxWidth().height(0.dp).focusProperties {
                             // The `ScrollingNotificationPanel` is a compose placeholder. Therefore,
                             // focus on the view that actually shows notifications.
                             onEnter = { stackScrollView.asView().requestFocus() }
