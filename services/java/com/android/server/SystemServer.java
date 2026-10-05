@@ -2442,7 +2442,8 @@ public final class SystemServer implements Dumpable {
             }
             t.traceEnd();
 
-            if (context.getResources().getBoolean(R.bool.config_enableGnssTimeUpdateService)) {
+            if (context.getResources().getBoolean(R.bool.config_enableGnssTimeUpdateService)
+                    && !"false".equals(SystemProperties.get("persist.sys.phh.hardening.gnss_time"))) {
                 t.traceBegin("StartGnssTimeUpdateService");
                 try {
                     mSystemServiceManager.startService(GnssTimeUpdateService.Lifecycle.class);

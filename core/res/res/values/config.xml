@@ -2065,6 +2065,7 @@
          See com.android.server.timedetector.TimeDetectorStrategy for available sources. -->
     <string-array name="config_autoTimeSourcesPriority">
         <item>network</item>
+        <item>gnss</item>
     </string-array>
 
     <!-- The difference in millis that has to exist between a time suggestion under
@@ -2074,7 +2075,7 @@
 
     <!-- Enables the GnssTimeUpdate service. This is the global switch for enabling Gnss time based
          suggestions to TimeDetector service. See also config_autoTimeSourcesPriority. -->
-    <bool name="config_enableGnssTimeUpdateService">false</bool>
+    <bool name="config_enableGnssTimeUpdateService">true</bool>
 
     <!-- Whether the geolocation time zone detection feature is enabled. Setting this to false means
          the feature cannot be used. Setting this to true means system server components can be
