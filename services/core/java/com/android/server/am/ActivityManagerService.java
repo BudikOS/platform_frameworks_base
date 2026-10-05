@@ -6031,29 +6031,6 @@ public class ActivityManagerService extends IActivityManager.Stub
     }
 
     private static boolean isPrototypeDevice() {
-        switch (Build.BRAND) {
-            case "google":
-                break;
-            default:
-                // Other OEMs may deal with hardware revisions differently
-                return false;
-        }
-
-        if (!SystemProperties.get("ro.revision").contains("MP")) {
-            // MP1.0 is what all 3rd generation and newer Pixel devices have as their mass
-            // production revision.
-            // Account for future mass production device revisions by only checking for "MP".
-            return true;
-        }
-
-        if (!SystemProperties.get("ro.boot.secure_boot").equals("PRODUCTION")) {
-            // All devices with a blown secure boot fuse will have the bootloader report
-            // ro.boot.secure_boot as being in PRODUCTION mode.
-            // Engineering devices typically don't have a blown secure boot fuse as they are used
-            // for firmware development.
-            return true;
-        }
-
         return false;
     }
 
