@@ -273,15 +273,16 @@ abstract class SettingsBasePreferenceFragment : PreferenceFragmentCompat() {
             val viewHolder = parent.getChildViewHolder(view)
             val position = viewHolder.bindingAdapterPosition
 
+            // Budík OS: rows of a group touch, the card background draws the 1dp dividers.
             val dimensionResId =
                 (parent.adapter as? SettingsPreferenceGroupAdapter)?.let { adapter ->
                     if (adapter.getItem(position) is ChainedMixin) {
                         R.dimen.settingslib_expressive_space_none
                     } else {
-                        R.dimen.settingslib_expressive_space_extrasmall1
+                        R.dimen.settingslib_budik_preference_gap
                     }
                 }
-                    ?: R.dimen.settingslib_expressive_space_extrasmall1 // Default if adapter is null or wrong type
+                    ?: R.dimen.settingslib_budik_preference_gap // Default if adapter is null or wrong type
 
             with(outRect) {
                 bottom = view.resources.getDimensionPixelSize(dimensionResId)

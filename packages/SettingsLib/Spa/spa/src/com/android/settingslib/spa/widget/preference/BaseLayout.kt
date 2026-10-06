@@ -30,6 +30,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
@@ -38,7 +39,6 @@ import com.android.settingslib.spa.framework.compose.highlightBackground
 import com.android.settingslib.spa.framework.compose.thenIf
 import com.android.settingslib.spa.framework.theme.SettingsDimension
 import com.android.settingslib.spa.framework.theme.SettingsOpacity.alphaForEnabled
-import com.android.settingslib.spa.framework.theme.SettingsShape
 import com.android.settingslib.spa.framework.theme.SettingsSize
 import com.android.settingslib.spa.framework.theme.SettingsSpace
 import com.android.settingslib.spa.framework.theme.SettingsTheme
@@ -71,7 +71,8 @@ internal fun BaseLayout(
                 .thenIf(isSpaExpressiveEnabled && LocalIsInCategory.current) {
                     Modifier.highlightBackground(
                         originalColor = surfaceBright,
-                        shape = SettingsShape.CornerExtraSmall2,
+                        // Budík OS: square rows, the category card rounds the group
+                        shape = RectangleShape,
                     )
                 }
                 .padding(end = paddingEnd),

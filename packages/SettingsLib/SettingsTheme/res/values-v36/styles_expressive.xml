@@ -18,7 +18,9 @@
 <resources>
     <style name="TextAppearance.SettingsLib.DisplayLarge"
         parent="@android:style/TextAppearance.DeviceDefault.Headline">
-        <item name="android:fontFamily">variable-display-large</item>
+        <!-- Budík OS: was display-large -->
+        <item name="android:fontFamily">schibsted-grotesk</item>
+        <item name="android:textFontWeight">800</item>
         <item name="android:textSize">57sp</item>
         <item name="android:letterSpacing">0</item>
         <item name="android:lineHeight">64sp</item>
@@ -28,7 +30,9 @@
     </style>
     <style name="TextAppearance.SettingsLib.DisplayMedium"
         parent="@android:style/TextAppearance.DeviceDefault.Headline">
-        <item name="android:fontFamily">variable-display-medium</item>
+        <!-- Budík OS: was display-medium -->
+        <item name="android:fontFamily">schibsted-grotesk</item>
+        <item name="android:textFontWeight">800</item>
         <item name="android:textSize">45sp</item>
         <item name="android:letterSpacing">0</item>
         <item name="android:lineHeight">52sp</item>
@@ -38,7 +42,9 @@
     </style>
     <style name="TextAppearance.SettingsLib.DisplaySmall"
         parent="@android:style/TextAppearance.DeviceDefault.Headline">
-        <item name="android:fontFamily">variable-display-small</item>
+        <!-- Budík OS: was display-small -->
+        <item name="android:fontFamily">schibsted-grotesk</item>
+        <item name="android:textFontWeight">800</item>
         <item name="android:textSize">36sp</item>
         <item name="android:letterSpacing">0</item>
         <item name="android:lineHeight">44sp</item>
@@ -49,7 +55,9 @@
 
     <style name="TextAppearance.SettingsLib.HeadlineLarge"
         parent="@android:style/TextAppearance.DeviceDefault.Headline">
-        <item name="android:fontFamily">variable-headline-large</item>
+        <!-- Budík OS: was headline-large -->
+        <item name="android:fontFamily">schibsted-grotesk</item>
+        <item name="android:textFontWeight">800</item>
         <item name="android:textSize">32sp</item>
         <item name="android:letterSpacing">0</item>
         <item name="android:lineHeight">40sp</item>
@@ -59,7 +67,9 @@
     </style>
     <style name="TextAppearance.SettingsLib.HeadlineMedium"
         parent="@android:style/TextAppearance.DeviceDefault.Headline">
-        <item name="android:fontFamily">variable-headline-medium</item>
+        <!-- Budík OS: was headline-medium -->
+        <item name="android:fontFamily">schibsted-grotesk</item>
+        <item name="android:textFontWeight">800</item>
         <item name="android:textSize">28sp</item>
         <item name="android:letterSpacing">0</item>
         <item name="android:lineHeight">36sp</item>
@@ -69,7 +79,9 @@
     </style>
     <style name="TextAppearance.SettingsLib.HeadlineSmall"
         parent="@android:style/TextAppearance.DeviceDefault.Headline">
-        <item name="android:fontFamily">variable-headline-small</item>
+        <!-- Budík OS: was headline-small -->
+        <item name="android:fontFamily">schibsted-grotesk</item>
+        <item name="android:textFontWeight">800</item>
         <item name="android:textSize">24sp</item>
         <item name="android:letterSpacing">0</item>
         <item name="android:lineHeight">32sp</item>
@@ -80,7 +92,9 @@
 
     <style name="TextAppearance.SettingsLib.TitleLarge"
         parent="@android:style/TextAppearance.DeviceDefault.Headline">
-        <item name="android:fontFamily">variable-title-large</item>
+        <!-- Budík OS: was title-large -->
+        <item name="android:fontFamily">schibsted-grotesk</item>
+        <item name="android:textFontWeight">700</item>
         <item name="android:textSize">22sp</item>
         <item name="android:letterSpacing">0</item>
         <item name="android:lineHeight">28sp</item>
@@ -90,7 +104,9 @@
     </style>
     <style name="TextAppearance.SettingsLib.TitleMedium"
         parent="@android:style/TextAppearance.DeviceDefault.Medium">
-        <item name="android:fontFamily">variable-title-medium</item>
+        <!-- Budík OS: was title-medium -->
+        <item name="android:fontFamily">instrument-sans</item>
+        <item name="android:textFontWeight">500</item>
         <item name="android:textSize">16sp</item>
         <item name="android:letterSpacing">0</item>
         <item name="android:lineHeight">24sp</item>
@@ -100,7 +116,9 @@
     </style>
     <style name="TextAppearance.SettingsLib.TitleSmall"
         parent="@android:style/TextAppearance.DeviceDefault.Medium">
-        <item name="android:fontFamily">variable-title-small</item>
+        <!-- Budík OS: was title-small -->
+        <item name="android:fontFamily">instrument-sans</item>
+        <item name="android:textFontWeight">600</item>
         <item name="android:textSize">14sp</item>
         <item name="android:letterSpacing">0</item>
         <item name="android:lineHeight">20sp</item>
@@ -111,7 +129,9 @@
 
     <style name="TextAppearance.SettingsLib.LabelLarge"
         parent="@android:style/TextAppearance.DeviceDefault.Medium">
-        <item name="android:fontFamily">variable-label-large</item>
+        <!-- Budík OS: was label-large -->
+        <item name="android:fontFamily">instrument-sans</item>
+        <item name="android:textFontWeight">600</item>
         <item name="android:textSize">14sp</item>
         <item name="android:letterSpacing">0</item>
         <item name="android:lineHeight">20sp</item>
@@ -121,7 +141,9 @@
     </style>
     <style name="TextAppearance.SettingsLib.LabelMedium"
         parent="@android:style/TextAppearance.DeviceDefault.Medium">
-        <item name="android:fontFamily">variable-label-medium</item>
+        <!-- Budík OS: was label-medium -->
+        <item name="android:fontFamily">instrument-sans</item>
+        <item name="android:textFontWeight">600</item>
         <item name="android:textSize">12sp</item>
         <item name="android:letterSpacing">0.00833333</item>
         <item name="android:lineHeight">16sp</item>
@@ -131,7 +153,9 @@
     </style>
     <style name="TextAppearance.SettingsLib.LabelSmall"
         parent="@android:style/TextAppearance.DeviceDefault.Medium">
-        <item name="android:fontFamily">variable-label-small</item>
+        <!-- Budík OS: was label-small -->
+        <item name="android:fontFamily">instrument-sans</item>
+        <item name="android:textFontWeight">600</item>
         <item name="android:textSize">11sp</item>
         <item name="android:letterSpacing">0.00909091</item>
         <item name="android:lineHeight">16sp</item>
@@ -142,7 +166,9 @@
 
     <style name="TextAppearance.SettingsLib.BodyLarge"
         parent="@android:style/TextAppearance.DeviceDefault">
-        <item name="android:fontFamily">variable-body-large</item>
+        <!-- Budík OS: was body-large -->
+        <item name="android:fontFamily">instrument-sans</item>
+        <item name="android:textFontWeight">400</item>
         <item name="android:textSize">16sp</item>
         <item name="android:letterSpacing">0</item>
         <item name="android:lineHeight">24sp</item>
@@ -152,7 +178,9 @@
     </style>
     <style name="TextAppearance.SettingsLib.BodyMedium"
         parent="@android:style/TextAppearance.DeviceDefault">
-        <item name="android:fontFamily">variable-body-medium</item>
+        <!-- Budík OS: was body-medium -->
+        <item name="android:fontFamily">instrument-sans</item>
+        <item name="android:textFontWeight">400</item>
         <item name="android:textSize">14sp</item>
         <item name="android:letterSpacing">0</item>
         <item name="android:lineHeight">20sp</item>
@@ -162,7 +190,9 @@
     </style>
     <style name="TextAppearance.SettingsLib.BodySmall"
         parent="@android:style/TextAppearance.DeviceDefault">
-        <item name="android:fontFamily">variable-body-small</item>
+        <!-- Budík OS: was body-small -->
+        <item name="android:fontFamily">instrument-sans</item>
+        <item name="android:textFontWeight">400</item>
         <item name="android:textSize">12sp</item>
         <item name="android:letterSpacing">0.00833333</item>
         <item name="android:lineHeight">16sp</item>
@@ -173,7 +203,9 @@
 
     <style name="TextAppearance.SettingsLib.DisplayLarge.Emphasized"
         parent="@android:style/TextAppearance.DeviceDefault.Widget.ActionBar.Title">
-        <item name="android:fontFamily">variable-display-large-emphasized</item>
+        <!-- Budík OS: was display-large-emphasized -->
+        <item name="android:fontFamily">schibsted-grotesk</item>
+        <item name="android:textFontWeight">800</item>
         <item name="android:textSize">57sp</item>
         <item name="android:letterSpacing">0</item>
         <item name="android:lineHeight">64sp</item>
@@ -183,7 +215,9 @@
     </style>
     <style name="TextAppearance.SettingsLib.DisplayMedium.Emphasized"
         parent="@android:style/TextAppearance.DeviceDefault.Widget.ActionBar.Title">
-        <item name="android:fontFamily">variable-display-medium-emphasized</item>
+        <!-- Budík OS: was display-medium-emphasized -->
+        <item name="android:fontFamily">schibsted-grotesk</item>
+        <item name="android:textFontWeight">800</item>
         <item name="android:textSize">45sp</item>
         <item name="android:letterSpacing">0</item>
         <item name="android:lineHeight">52sp</item>
@@ -193,7 +227,9 @@
     </style>
     <style name="TextAppearance.SettingsLib.DisplaySmall.Emphasized"
         parent="@android:style/TextAppearance.DeviceDefault.Widget.ActionBar.Title">
-        <item name="android:fontFamily">variable-display-small-emphasized</item>
+        <!-- Budík OS: was display-small-emphasized -->
+        <item name="android:fontFamily">schibsted-grotesk</item>
+        <item name="android:textFontWeight">800</item>
         <item name="android:textSize">36sp</item>
         <item name="android:letterSpacing">0</item>
         <item name="android:lineHeight">44sp</item>
@@ -204,7 +240,9 @@
 
     <style name="TextAppearance.SettingsLib.HeadlineLarge.Emphasized"
         parent="@android:style/TextAppearance.DeviceDefault.Widget.ActionBar.Title">
-        <item name="android:fontFamily">variable-headline-large-emphasized</item>
+        <!-- Budík OS: was headline-large-emphasized -->
+        <item name="android:fontFamily">schibsted-grotesk</item>
+        <item name="android:textFontWeight">800</item>
         <item name="android:textSize">32sp</item>
         <item name="android:letterSpacing">0</item>
         <item name="android:lineHeight">40sp</item>
@@ -214,7 +252,9 @@
     </style>
     <style name="TextAppearance.SettingsLib.HeadlineMedium.Emphasized"
         parent="@android:style/TextAppearance.DeviceDefault.Widget.ActionBar.Title">
-        <item name="android:fontFamily">variable-headline-medium-emphasized</item>
+        <!-- Budík OS: was headline-medium-emphasized -->
+        <item name="android:fontFamily">schibsted-grotesk</item>
+        <item name="android:textFontWeight">800</item>
         <item name="android:textSize">28sp</item>
         <item name="android:letterSpacing">0</item>
         <item name="android:lineHeight">36sp</item>
@@ -224,7 +264,9 @@
     </style>
     <style name="TextAppearance.SettingsLib.HeadlineSmall.Emphasized"
         parent="@android:style/TextAppearance.DeviceDefault.Widget.ActionBar.Title">
-        <item name="android:fontFamily">variable-headline-small-emphasized</item>
+        <!-- Budík OS: was headline-small-emphasized -->
+        <item name="android:fontFamily">schibsted-grotesk</item>
+        <item name="android:textFontWeight">800</item>
         <item name="android:textSize">24sp</item>
         <item name="android:letterSpacing">0</item>
         <item name="android:lineHeight">32sp</item>
@@ -235,7 +277,9 @@
 
     <style name="TextAppearance.SettingsLib.TitleLarge.Emphasized"
         parent="@android:style/TextAppearance.DeviceDefault.Widget.ActionBar.Title">
-        <item name="android:fontFamily">variable-title-large-emphasized</item>
+        <!-- Budík OS: was title-large-emphasized -->
+        <item name="android:fontFamily">schibsted-grotesk</item>
+        <item name="android:textFontWeight">800</item>
         <item name="android:textSize">22sp</item>
         <item name="android:letterSpacing">0</item>
         <item name="android:lineHeight">28sp</item>
@@ -245,7 +289,9 @@
     </style>
     <style name="TextAppearance.SettingsLib.TitleMedium.Emphasized"
         parent="@android:style/TextAppearance.DeviceDefault">
-        <item name="android:fontFamily">variable-title-medium-emphasized</item>
+        <!-- Budík OS: was title-medium-emphasized -->
+        <item name="android:fontFamily">instrument-sans</item>
+        <item name="android:textFontWeight">700</item>
         <item name="android:textSize">16sp</item>
         <item name="android:letterSpacing">0</item>
         <item name="android:lineHeight">24sp</item>
@@ -255,7 +301,9 @@
     </style>
     <style name="TextAppearance.SettingsLib.TitleSmall.Emphasized"
         parent="@android:style/TextAppearance.DeviceDefault">
-        <item name="android:fontFamily">variable-title-small-emphasized</item>
+        <!-- Budík OS: was title-small-emphasized -->
+        <item name="android:fontFamily">instrument-sans</item>
+        <item name="android:textFontWeight">700</item>
         <item name="android:textSize">14sp</item>
         <item name="android:letterSpacing">0</item>
         <item name="android:lineHeight">20sp</item>
@@ -266,7 +314,9 @@
 
     <style name="TextAppearance.SettingsLib.LabelLarge.Emphasized"
         parent="@android:style/TextAppearance.DeviceDefault">
-        <item name="android:fontFamily">variable-label-large-emphasized</item>
+        <!-- Budík OS: was label-large-emphasized -->
+        <item name="android:fontFamily">instrument-sans</item>
+        <item name="android:textFontWeight">700</item>
         <item name="android:textSize">14sp</item>
         <item name="android:letterSpacing">0</item>
         <item name="android:lineHeight">20sp</item>
@@ -276,7 +326,9 @@
     </style>
     <style name="TextAppearance.SettingsLib.LabelMedium.Emphasized"
         parent="@android:style/TextAppearance.DeviceDefault">
-        <item name="android:fontFamily">variable-label-medium-emphasized</item>
+        <!-- Budík OS: was label-medium-emphasized -->
+        <item name="android:fontFamily">instrument-sans</item>
+        <item name="android:textFontWeight">700</item>
         <item name="android:textSize">12sp</item>
         <item name="android:letterSpacing">0.00833333</item>
         <item name="android:lineHeight">16sp</item>
@@ -286,7 +338,9 @@
     </style>
     <style name="TextAppearance.SettingsLib.LabelSmall.Emphasized"
         parent="@android:style/TextAppearance.DeviceDefault">
-        <item name="android:fontFamily">variable-label-small-emphasized</item>
+        <!-- Budík OS: was label-small-emphasized -->
+        <item name="android:fontFamily">instrument-sans</item>
+        <item name="android:textFontWeight">700</item>
         <item name="android:textSize">11sp</item>
         <item name="android:letterSpacing">0.00909091</item>
         <item name="android:lineHeight">16sp</item>
@@ -297,7 +351,9 @@
 
     <style name="TextAppearance.SettingsLib.BodyLarge.Emphasized"
         parent="@android:style/TextAppearance.DeviceDefault.Medium">
-        <item name="android:fontFamily">variable-body-large-emphasized</item>
+        <!-- Budík OS: was body-large-emphasized -->
+        <item name="android:fontFamily">instrument-sans</item>
+        <item name="android:textFontWeight">500</item>
         <item name="android:textSize">16sp</item>
         <item name="android:letterSpacing">0</item>
         <item name="android:lineHeight">24sp</item>
@@ -307,7 +363,9 @@
     </style>
     <style name="TextAppearance.SettingsLib.BodyMedium.Emphasized"
         parent="@android:style/TextAppearance.DeviceDefault.Medium">
-        <item name="android:fontFamily">variable-body-medium-emphasized</item>
+        <!-- Budík OS: was body-medium-emphasized -->
+        <item name="android:fontFamily">instrument-sans</item>
+        <item name="android:textFontWeight">500</item>
         <item name="android:textSize">14sp</item>
         <item name="android:letterSpacing">0</item>
         <item name="android:lineHeight">20sp</item>
@@ -317,7 +375,9 @@
     </style>
     <style name="TextAppearance.SettingsLib.BodySmall.Emphasized"
         parent="@android:style/TextAppearance.DeviceDefault.Medium">
-        <item name="android:fontFamily">variable-body-small-emphasized</item>
+        <!-- Budík OS: was body-small-emphasized -->
+        <item name="android:fontFamily">instrument-sans</item>
+        <item name="android:textFontWeight">500</item>
         <item name="android:textSize">12sp</item>
         <item name="android:letterSpacing">0</item>
         <item name="android:lineHeight">16sp</item>
@@ -333,10 +393,14 @@
         <item name="android:background">@null</item>
         <item name="android:clickable">false</item>
         <item name="android:focusable">false</item>
-        <item name="thumbIcon">@drawable/settingslib_expressive_switch_thumb_icon</item>
-        <item name="thumbIconTint">@color/settingslib_expressive_color_switch_thumb_icon</item>
-        <item name="thumbTint">@color/settingslib_expressive_color_switch_thumb</item>
-        <item name="trackTint">@color/settingslib_expressive_color_switch_track</item>
+        <!-- Budík OS keycap switch (export/mockups/*/10_components): mint track with ink
+             stroke and an ink square thumb when on, light keycap when off. -->
+        <item name="android:thumb">@drawable/settingslib_budik_switch_thumb</item>
+        <item name="track">@drawable/settingslib_budik_switch_track</item>
+        <item name="thumbIcon">@null</item>
+        <item name="thumbTint">@null</item>
+        <item name="trackTint">@null</item>
+        <item name="trackDecoration">@null</item>
     </style>
 
     <style name="SettingslibMainSwitchStyle.Expressive" parent="SettingslibSwitchStyle.Expressive">
@@ -437,6 +501,7 @@
         <item name="android:scrollHorizontally">false</item>
         <item name="android:ellipsize">end</item>
         <item name="android:textAppearance">@style/TextAppearance.SettingsLib.HeadlineSmall</item>
+        <item name="android:letterSpacing">-0.035</item>
     </style>
 
     <style name="Widget.SettingsLib.ButtonBar" parent="@style/Widget.AppCompat.ButtonBar.AlertDialog">
@@ -455,28 +520,61 @@
         <item name="android:textAppearance">@style/TextAppearance.SettingsLib.LabelLarge</item>
         <item name="android:textColor">@color/settingslib_materialColorPrimary</item>
         <item name="android:background">@android:color/transparent</item>
+        <!-- Budík OS: bold Schibsted Grotesk button labels -->
+        <item name="android:fontFamily">schibsted-grotesk</item>
+        <item name="android:textFontWeight">700</item>
+        <item name="android:textSize">16sp</item>
     </style>
 
     <style name="Widget.SettingsLib.DialogButton.Filled">
         <item name="android:layout_marginEnd">@dimen/settingslib_expressive_space_extrasmall6</item>
-        <item name="android:background">@drawable/settingslib_expressive_button_background_filled</item>
-        <item name="backgroundTint">@color/settingslib_materialColorPrimary</item>
-        <item name="android:textColor">@color/settingslib_materialColorOnPrimary</item>
+        <!-- Budík OS: navy keycap with a hard 3dp shadow (export/mockups/*/11_dialog...) -->
+        <item name="android:background">@drawable/settingslib_budik_button_primary</item>
+        <item name="backgroundTint">@null</item>
+        <item name="android:backgroundTint">@null</item>
+        <item name="android:textColor">@color/settingslib_budik_on_primary</item>
+        <item name="android:paddingHorizontal">@dimen/settingslib_expressive_space_small4</item>
     </style>
 
+    <!-- Budík OS: the secondary dialog action is plain bold text ("Později" in the mockup) -->
     <style name="Widget.SettingsLib.DialogButton.Outline">
         <item name="android:layout_marginEnd">@dimen/settingslib_expressive_space_extrasmall4</item>
-        <item name="android:background">@drawable/settingslib_expressive_button_background_outline</item>
-        <item name="backgroundTint">@color/settingslib_materialColorOutlineVariant</item>
-        <item name="android:textColor">@color/settingslib_materialColorPrimary</item>
+        <item name="android:background">@drawable/settingslib_budik_button_text</item>
+        <item name="backgroundTint">@null</item>
+        <item name="android:backgroundTint">@null</item>
+        <item name="android:textColor">@color/settingslib_budik_fg</item>
     </style>
 
+    <!-- Budík OS slider: drawn by BudikSegmentSlider as the control centre's segmented bar,
+         the Material track, thumb, ticks and halo stay invisible (input only). -->
     <style name="SettingslibSliderStyle.Expressive" parent="">
-        <item name="trackColorActive">@color/settingslib_expressive_color_slider_track_active</item>
-        <item name="trackColorInactive">@color/settingslib_expressive_color_slider_track_inactive</item>
-        <item name="thumbColor">@color/settingslib_expressive_color_slider_thumb</item>
-        <item name="tickColorActive">@color/settingslib_expressive_color_slider_track_inactive</item>
-        <item name="tickColorInactive">@color/settingslib_expressive_color_slider_track_active</item>
-        <item name="haloColor">@color/settingslib_expressive_color_slider_halo</item>
+        <item name="trackColorActive">@android:color/transparent</item>
+        <item name="trackColorInactive">@android:color/transparent</item>
+        <item name="thumbColor">@android:color/transparent</item>
+        <item name="thumbStrokeWidth">0dp</item>
+        <item name="thumbElevation">0dp</item>
+        <item name="tickVisible">false</item>
+        <item name="tickColorActive">@android:color/transparent</item>
+        <item name="tickColorInactive">@android:color/transparent</item>
+        <item name="trackHeight">24dp</item>
+        <item name="thumbTrackGapSize">0dp</item>
+        <item name="trackStopIndicatorSize">0dp</item>
+        <item name="haloColor">@android:color/transparent</item>
+    </style>
+
+    <!-- Budík OS section label: Instrument Sans caps, letter-spaced, tabular digits -->
+    <style name="TextAppearance.SettingsLib.BudikCategoryTitle"
+        parent="@style/TextAppearance.SettingsLib.LabelLarge">
+        <item name="android:textSize">13sp</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:letterSpacing">0.12</item>
+        <item name="android:fontFeatureSettings">tnum</item>
+    </style>
+
+    <!-- Budík OS slider value: Instrument Sans, tabular digits (control centre style) -->
+    <style name="TextAppearance.SettingsLib.BudikSliderValue"
+        parent="@style/TextAppearance.SettingsLib.TitleMedium">
+        <item name="android:fontFeatureSettings">tnum</item>
+        <item name="android:textColor">@color/settingslib_budik_fg</item>
     </style>
 </resources>

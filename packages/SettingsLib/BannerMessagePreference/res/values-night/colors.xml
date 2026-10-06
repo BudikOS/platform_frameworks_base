@@ -16,10 +16,10 @@
   -->
 
 <resources>
-    <color name="banner_background_attention_high">#3B2D2C</color> <!-- red card background -->
-    <color name="banner_background_attention_medium">#333121</color> <!-- yellow card background -->
-    <color name="banner_background_attention_low">#2B3328</color> <!-- green card background -->
-    <color name="banner_accent_attention_high">#F28B82</color> <!-- red accent color -->
-    <color name="banner_accent_attention_medium">#FDD663</color> <!-- yellow accent color -->
-    <color name="banner_accent_attention_low">#81C995</color> <!-- green accent color -->
+    <color name="banner_background_attention_high">#17191C</color> <!-- Budík OS: surface card -->
+    <color name="banner_background_attention_medium">#17191C</color> <!-- Budík OS: surface card -->
+    <color name="banner_background_attention_low">#17191C</color> <!-- Budík OS: surface card -->
+    <color name="banner_accent_attention_high">#21D4BE</color> <!-- Budík OS: mint -->
+    <color name="banner_accent_attention_medium">#21D4BE</color> <!-- Budík OS: mint -->
+    <color name="banner_accent_attention_low">#21D4BE</color> <!-- Budík OS: mint -->
 </resources>

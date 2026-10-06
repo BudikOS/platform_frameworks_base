@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Budík OS geometry (export/res/values/dimens.xml): radii 6 / 12 / 20, hard shadow 0 x 3 dp. -->
+<resources>
+    <dimen name="settingslib_budik_radius_s">6dp</dimen>
+    <dimen name="settingslib_budik_radius_m">12dp</dimen>
+    <dimen name="settingslib_budik_radius_l">20dp</dimen>
+    <dimen name="settingslib_budik_shadow">3dp</dimen>
+    <dimen name="settingslib_budik_shadow_dialog">4dp</dimen>
+    <!-- inset groups: card margin to the screen edge and content padding inside the card -->
+    <dimen name="settingslib_budik_card_margin">8dp</dimen>
+    <dimen name="settingslib_budik_card_inner">14dp</dimen>
+    <!-- rows of a group touch, the card draws the 1dp divider -->
+    <dimen name="settingslib_budik_preference_gap">0dp</dimen>
+    <dimen name="settingslib_budik_row_min_height">48dp</dimen>
+    <dimen name="settingslib_budik_row_padding">6dp</dimen>
+</resources>

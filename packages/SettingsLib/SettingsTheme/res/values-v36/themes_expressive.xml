@@ -68,6 +68,8 @@
         <item name="colorAccent">@color/settingslib_materialColorPrimary</item>
         <item name="android:colorBackground">@color/settingslib_materialColorSurfaceContainerHigh</item>
         <item name="android:windowTitleStyle">@style/Widget.SettingsLib.DialogWindowTitle</item>
+        <!-- Budík OS: surface card, radius 20, hard 4dp shadow -->
+        <item name="android:windowBackground">@drawable/settingslib_budik_dialog_background</item>
         <item name="dialogPreferredPadding">@dimen/settingslib_expressive_space_small4</item>
         <item name="buttonBarStyle">@style/Widget.SettingsLib.ButtonBar</item>
         <item name="buttonBarPositiveButtonStyle">@style/Widget.SettingsLib.DialogButton.Filled</item>
@@ -80,6 +82,8 @@
         <item name="android:colorBackground">@color/settingslib_materialColorSurfaceContainerHigh</item>
         <item name="android:dialogPreferredPadding">@dimen/settingslib_expressive_space_small4</item>
         <item name="android:windowTitleStyle">@style/Widget.SettingsLib.DialogWindowTitle</item>
+        <!-- Budík OS: surface card, radius 20, hard 4dp shadow -->
+        <item name="android:windowBackground">@drawable/settingslib_budik_dialog_background</item>
         <item name="android:buttonBarStyle">@style/Widget.SettingsLib.ButtonBar</item>
         <item name="android:buttonBarPositiveButtonStyle">@style/Widget.SettingsLib.DialogButton.Filled</item>
         <item name="android:buttonBarNegativeButtonStyle">@style/Widget.SettingsLib.DialogButton.Outline</item>

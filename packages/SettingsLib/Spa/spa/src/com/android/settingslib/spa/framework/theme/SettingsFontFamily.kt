@@ -18,7 +18,6 @@
 
 package com.android.settingslib.spa.framework.theme
 
-import android.annotation.SuppressLint
 import android.content.Context
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.ExperimentalTextApi
@@ -49,53 +48,35 @@ internal interface SettingsFontFamily {
     val labelSmallEmphasized: FontFamily
 }
 
+/** Budík OS fonts: Schibsted Grotesk for headings, Instrument Sans for everything else. */
+@Suppress("UnusedReceiverParameter")
 private fun Context.getSettingsFontFamily() = object : SettingsFontFamily {
-    override val brand = getFontFamily(
-        configFontFamilyNormal = "config_headlineFontFamily",
-        configFontFamilyMedium = "config_headlineFontFamilyMedium",
-    )
-    override val plain = getFontFamily(
-        configFontFamilyNormal = "config_bodyFontFamily",
-        configFontFamilyMedium = "config_bodyFontFamilyMedium",
-    )
-    override val displayLargeEmphasized = fontFamily("variable-display-large-emphasized")
-    override val displayMediumEmphasized = fontFamily("variable-display-medium-emphasized")
-    override val displaySmallEmphasized = fontFamily("variable-display-small-emphasized")
-    override val headlineLargeEmphasized = fontFamily("variable-headline-large-emphasized")
-    override val headlineMediumEmphasized = fontFamily("variable-headline-medium-emphasized")
-    override val headlineSmallEmphasized = fontFamily("variable-headline-small-emphasized")
-    override val titleLargeEmphasized = fontFamily("variable-title-large-emphasized")
-    override val titleMediumEmphasized = fontFamily("variable-title-medium-emphasized")
-    override val titleSmallEmphasized = fontFamily("variable-title-small-emphasized")
-    override val bodyLargeEmphasized = fontFamily("variable-body-large-emphasized")
-    override val bodyMediumEmphasized = fontFamily("variable-body-medium-emphasized")
-    override val bodySmallEmphasized = fontFamily("variable-body-small-emphasized")
-    override val labelLargeEmphasized = fontFamily("variable-label-large-emphasized")
-    override val labelMediumEmphasized = fontFamily("variable-label-medium-emphasized")
-    override val labelSmallEmphasized = fontFamily("variable-label-small-emphasized")
+    private val schibsted = deviceFamily("schibsted-grotesk")
+    private val instrument = deviceFamily("instrument-sans")
 
-    private fun fontFamily(name: String): FontFamily =
-        FontFamily(Font(DeviceFontFamilyName(name)))
+    override val brand = schibsted
+    override val plain = instrument
+    override val displayLargeEmphasized = schibsted
+    override val displayMediumEmphasized = schibsted
+    override val displaySmallEmphasized = schibsted
+    override val headlineLargeEmphasized = schibsted
+    override val headlineMediumEmphasized = schibsted
+    override val headlineSmallEmphasized = schibsted
+    override val titleLargeEmphasized = schibsted
+    override val titleMediumEmphasized = instrument
+    override val titleSmallEmphasized = instrument
+    override val bodyLargeEmphasized = instrument
+    override val bodyMediumEmphasized = instrument
+    override val bodySmallEmphasized = instrument
+    override val labelLargeEmphasized = instrument
+    override val labelMediumEmphasized = instrument
+    override val labelSmallEmphasized = instrument
 }
 
-private fun Context.getFontFamily(
-    configFontFamilyNormal: String,
-    configFontFamilyMedium: String,
-): FontFamily {
-    val fontFamilyNormal = getAndroidConfig(configFontFamilyNormal)
-    val fontFamilyMedium = getAndroidConfig(configFontFamilyMedium)
-    if (fontFamilyNormal.isEmpty() || fontFamilyMedium.isEmpty()) return FontFamily.Default
-    return FontFamily(
-        Font(DeviceFontFamilyName(fontFamilyNormal), FontWeight.Normal),
-        Font(DeviceFontFamilyName(fontFamilyMedium), FontWeight.Medium),
-    )
-}
-
-private fun Context.getAndroidConfig(configName: String): String {
-    @SuppressLint("DiscouragedApi")
-    val configId = resources.getIdentifier(configName, "string", "android")
-    return resources.getString(configId)
-}
+private fun deviceFamily(name: String): FontFamily = FontFamily(
+    listOf(FontWeight.Normal, FontWeight.Medium, FontWeight.SemiBold, FontWeight.Bold,
+        FontWeight.ExtraBold).map { Font(DeviceFontFamilyName(name), it) }
+)
 
 @Composable
 internal fun rememberSettingsFontFamily(): SettingsFontFamily {

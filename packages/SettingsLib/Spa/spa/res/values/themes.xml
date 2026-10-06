@@ -21,6 +21,9 @@
         <item name="android:navigationBarColor">@android:color/transparent</item>
         <item name="android:windowActionBar">false</item>
         <item name="android:windowNoTitle">true</item>
+        <!-- Budík OS: page background from the Budík palette, not wallpaper colours -->
+        <item name="android:colorBackground">@color/spa_budik_bg</item>
+        <item name="android:windowBackground">@color/spa_budik_bg</item>
     </style>
 
     <style name="Theme.SpaLib.Dialog" parent="Theme.Material3.DayNight.Dialog.Alert">

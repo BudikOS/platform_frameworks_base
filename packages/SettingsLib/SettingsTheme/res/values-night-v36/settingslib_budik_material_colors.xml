@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Budík OS: fixed palette instead of wallpaper (monet) colours for the expressive theme. -->
+<resources>
+    <color name="settingslib_materialColorPrimary">#21D4BE</color>
+    <color name="settingslib_materialColorOnPrimary">#0E0F11</color>
+    <color name="settingslib_materialColorPrimaryContainer">#21D4BE</color>
+    <color name="settingslib_materialColorOnPrimaryContainer">#0E0F11</color>
+    <color name="settingslib_materialColorPrimaryInverse">#0B1E52</color>
+    <color name="settingslib_materialColorSecondary">#C4C8CE</color>
+    <color name="settingslib_materialColorOnSecondary">#0E0F11</color>
+    <color name="settingslib_materialColorSecondaryContainer">#262A2F</color>
+    <color name="settingslib_materialColorOnSecondaryContainer">#F5F6F7</color>
+    <color name="settingslib_materialColorTertiary">#21D4BE</color>
+    <color name="settingslib_materialColorOnTertiary">#0E0F11</color>
+    <color name="settingslib_materialColorTertiaryContainer">#05332E</color>
+    <color name="settingslib_materialColorOnTertiaryContainer">#21D4BE</color>
+    <color name="settingslib_materialColorOutline">#3A3F46</color>
+    <color name="settingslib_materialColorOutlineVariant">#262A2F</color>
+    <color name="settingslib_materialColorBackground">#0E0F11</color>
+    <color name="settingslib_materialColorOnBackground">#F5F6F7</color>
+    <color name="settingslib_materialColorSurface">#0E0F11</color>
+    <color name="settingslib_materialColorOnSurface">#F5F6F7</color>
+    <color name="settingslib_materialColorSurfaceVariant">#1A1C20</color>
+    <color name="settingslib_materialColorOnSurfaceVariant">#8D949E</color>
+    <color name="settingslib_materialColorSurfaceInverse">#F5F6F7</color>
+    <color name="settingslib_materialColorOnSurfaceInverse">#0E0F11</color>
+    <color name="settingslib_materialColorSurfaceBright">#17191C</color>
+    <color name="settingslib_materialColorSurfaceDim">#0E0F11</color>
+    <color name="settingslib_materialColorSurfaceContainer">#0E0F11</color>
+    <color name="settingslib_materialColorSurfaceContainerLow">#17191C</color>
+    <color name="settingslib_materialColorSurfaceContainerLowest">#0A0B0D</color>
+    <color name="settingslib_materialColorSurfaceContainerHigh">#17191C</color>
+    <color name="settingslib_materialColorSurfaceContainerHighest">#262A2F</color>
+</resources>

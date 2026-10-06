@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Budík OS keycap switch thumb: 18dp square, concentric with the track (radius 3). -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_enabled="false">
+        <layer-list>
+            <item android:width="18dp" android:height="26dp">
+                <shape android:shape="rectangle"><solid android:color="@android:color/transparent" /></shape>
+            </item>
+            <item android:width="18dp" android:height="18dp" android:gravity="center">
+                <shape android:shape="rectangle">
+                    <solid android:color="@color/settingslib_budik_switch_thumb_disabled" />
+                    <corners android:radius="3dp" />
+                </shape>
+            </item>
+        </layer-list>
+    </item>
+    <item android:state_checked="true">
+        <layer-list>
+            <item android:width="18dp" android:height="26dp">
+                <shape android:shape="rectangle"><solid android:color="@android:color/transparent" /></shape>
+            </item>
+            <item android:width="18dp" android:height="18dp" android:gravity="center">
+                <shape android:shape="rectangle">
+                    <solid android:color="@color/settingslib_budik_switch_thumb_on" />
+                    <corners android:radius="3dp" />
+                </shape>
+            </item>
+        </layer-list>
+    </item>
+    <item>
+        <layer-list>
+            <item android:width="18dp" android:height="26dp">
+                <shape android:shape="rectangle"><solid android:color="@android:color/transparent" /></shape>
+            </item>
+            <item android:width="18dp" android:height="18dp" android:gravity="center">
+                <shape android:shape="rectangle">
+                    <solid android:color="@color/settingslib_budik_switch_thumb_off" />
+                    <stroke android:width="2dp" android:color="@color/settingslib_budik_switch_stroke_off" />
+                    <corners android:radius="3dp" />
+                </shape>
+            </item>
+        </layer-list>
+    </item>
+</selector>

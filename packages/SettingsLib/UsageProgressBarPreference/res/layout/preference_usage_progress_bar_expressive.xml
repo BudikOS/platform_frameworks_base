@@ -60,14 +60,13 @@
             app:layout_constraintBottom_toBottomOf="@id/total_summary"/>
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <com.google.android.material.progressindicator.LinearProgressIndicator
-        android:theme="@style/Theme.Material3.DynamicColors.DayNight"
+    <!-- Budík OS: segmented bar like the control centre brightness (storage, battery) -->
+    <com.android.settingslib.widget.BudikSegmentProgressBar
         android:id="@android:id/progress"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:max="100"
-        android:scaleY="1"
-        style="@style/SettingsLibProgressBarStyle.Linear.Expressive" />
+        android:layout_height="24dp"
+        android:layout_marginTop="8dp"
+        android:max="100" />
 
     <TextView
         android:id="@+id/bottom_summary"

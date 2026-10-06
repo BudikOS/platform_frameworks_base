@@ -41,13 +41,23 @@
             android:tintMode="src_in" />
     </FrameLayout>
 
-    <com.google.android.material.slider.Slider
+    <!-- Budík OS: segmented bar like the control centre brightness -->
+    <com.android.settingslib.widget.BudikSegmentSlider
         android:id="@+id/slider"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
         android:theme="@style/Theme.MaterialComponents.DayNight"
         style="@style/SettingslibSliderStyle.Expressive" />
+
+    <TextView
+        android:id="@+id/budik_slider_value"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:minWidth="32dp"
+        android:gravity="end"
+        android:importantForAccessibility="no"
+        android:textAppearance="@style/TextAppearance.SettingsLib.BudikSliderValue" />
 
     <FrameLayout
         android:id="@+id/icon_end_frame"

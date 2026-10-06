@@ -31,7 +31,7 @@ object SettingsDimension {
     val itemPaddingStart = if (isSpaExpressiveEnabled) paddingLarge else paddingExtraLarge
     val itemPaddingEnd = paddingLarge
     val itemPaddingVertical =
-        if (isSpaExpressiveEnabled) SettingsSpace.extraSmall6 else paddingLarge
+        if (isSpaExpressiveEnabled) 8.dp else paddingLarge // Budík OS: compact rows
     val itemPadding = PaddingValues(
         start = itemPaddingStart,
         top = itemPaddingVertical,
@@ -84,5 +84,5 @@ object SettingsDimension {
     val illustrationPadding = paddingLarge
     val illustrationCornerRadius = 28.dp
 
-    val preferenceMinHeight = 72.dp
+    val preferenceMinHeight = 48.dp // Budík OS: compact iOS-like rows (was 72dp)
 }

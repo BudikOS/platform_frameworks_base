@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Budík OS primary button label: white on navy, secondary text when disabled. -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_enabled="false" android:color="@color/settingslib_budik_fg3" />
+    <item android:color="@color/settingslib_budik_on_primary" />
+</selector>

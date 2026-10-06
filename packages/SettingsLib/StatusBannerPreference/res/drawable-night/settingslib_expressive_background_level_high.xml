@@ -17,5 +17,5 @@
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="oval">
     <size android:height="72dp" android:width="72dp" />
-    <solid android:color="@color/m3_ref_palette_red20" />
+    <solid android:color="@color/settingslib_budik_pixel" />
 </shape>

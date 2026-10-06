@@ -31,6 +31,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import com.android.settingslib.spa.framework.theme.SettingsRadius
 import com.android.settingslib.spa.framework.theme.SettingsSpace
 import com.android.settingslib.spa.framework.theme.SettingsTheme
@@ -67,12 +68,13 @@ fun LazyCategory(
         modifier = Modifier.fillMaxSize(),
         contentPadding =
             PaddingValues(
-                start = SettingsSpace.small1,
+                start = 8.dp, // Budík OS: cards close to the screen edge
                 top = SettingsSpace.extraSmall4,
-                end = SettingsSpace.small1,
+                end = 8.dp,
                 bottom = bottomPadding,
             ),
-        verticalArrangement = Arrangement.spacedBy(SettingsSpace.extraSmall1),
+        // Budík OS: rows of a group touch, the 1dp gap shows as a divider line
+        verticalArrangement = Arrangement.spacedBy(1.dp),
         state = state,
     ) {
         item(contentType = "header") { header() }

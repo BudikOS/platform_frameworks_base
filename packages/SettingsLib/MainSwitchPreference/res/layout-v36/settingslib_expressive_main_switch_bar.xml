@@ -15,21 +15,22 @@
   limitations under the License.
   -->
 
+<!-- Budík OS: compact card row like the preference groups (margins, height, regular weight) -->
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_height="wrap_content"
     android:layout_width="match_parent"
     android:minHeight="?android:attr/listPreferredItemHeight"
-    android:paddingVertical="@dimen/settingslib_expressive_space_small1"
+    android:paddingVertical="@dimen/settingslib_budik_row_padding"
     android:orientation="vertical">
 
     <LinearLayout
         android:id="@+id/frame"
-        android:minHeight="@dimen/settingslib_expressive_space_large3"
+        android:minHeight="@dimen/settingslib_budik_row_min_height"
         android:layout_height="wrap_content"
         android:layout_width="match_parent"
-        android:paddingStart="@dimen/settingslib_expressive_space_medium1"
-        android:paddingEnd="@dimen/settingslib_expressive_space_small3"
+        android:paddingStart="@dimen/settingslib_budik_card_inner"
+        android:paddingEnd="@dimen/settingslib_budik_card_inner"
         android:background="@drawable/settingslib_expressive_switch_bar_bg">
 
         <RelativeLayout
@@ -37,7 +38,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
             android:layout_marginEnd="@dimen/settingslib_expressive_space_extrasmall4"
-            android:layout_marginVertical="@dimen/settingslib_expressive_space_small1"
+            android:layout_marginVertical="@dimen/settingslib_budik_row_padding"
             android:layout_weight="1">
 
             <TextView
@@ -47,7 +48,7 @@
                 android:layout_gravity="start"
                 android:ellipsize="end"
                 android:textAlignment="viewStart"
-                android:textAppearance="@style/TextAppearance.SettingsLib.TitleMedium.Emphasized"
+                android:textAppearance="@style/TextAppearance.SettingsLib.TitleMedium"
                 android:textColor="@color/settingslib_expressive_color_main_switch_text" />
 
             <TextView

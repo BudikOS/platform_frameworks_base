@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Budík OS keycap switch track, 44 x 26 dp, radius 6. The 4dp side padding keeps the
+     thumb inside the 2dp stroke (SwitchCompat reads the track padding). -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_enabled="false">
+        <shape android:shape="rectangle">
+            <size android:width="44dp" android:height="26dp" />
+            <solid android:color="@color/settingslib_budik_switch_disabled" />
+            <corners android:radius="@dimen/settingslib_budik_radius_s" />
+            <padding android:left="4dp" android:right="4dp" />
+        </shape>
+    </item>
+    <item android:state_checked="true">
+        <shape android:shape="rectangle">
+            <size android:width="44dp" android:height="26dp" />
+            <solid android:color="@color/settingslib_budik_mint" />
+            <stroke android:width="2dp" android:color="@color/settingslib_budik_switch_stroke_on" />
+            <corners android:radius="@dimen/settingslib_budik_radius_s" />
+            <padding android:left="4dp" android:right="4dp" />
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <size android:width="44dp" android:height="26dp" />
+            <solid android:color="@color/settingslib_budik_switch_track_off" />
+            <stroke android:width="2dp" android:color="@color/settingslib_budik_switch_stroke_off" />
+            <corners android:radius="@dimen/settingslib_budik_radius_s" />
+            <padding android:left="4dp" android:right="4dp" />
+        </shape>
+    </item>
+</selector>

@@ -17,10 +17,10 @@
 
 <resources>
     <!-- static palette green60 -->
-    <color name="settingslib_expressive_color_status_level_low">@color/m3_ref_palette_green60</color>
+    <color name="settingslib_expressive_color_status_level_low">@color/settingslib_colorBackgroundLevel_low</color> <!-- Budík OS palette -->
     <!-- static palette yellow80 -->
-    <color name="settingslib_expressive_color_status_level_medium">@color/m3_ref_palette_yellow80</color>
+    <color name="settingslib_expressive_color_status_level_medium">@color/settingslib_colorBackgroundLevel_medium</color> <!-- Budík OS palette -->
     <!-- static palette red50 -->
-    <color name="settingslib_expressive_color_status_level_high">@color/m3_ref_palette_red50</color>
+    <color name="settingslib_expressive_color_status_level_high">@color/settingslib_colorBackgroundLevel_high</color> <!-- Budík OS palette -->
     <color name="settingslib_expressive_color_status_level_off">#D1C2CB</color>
 </resources>

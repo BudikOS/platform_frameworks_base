@@ -80,7 +80,8 @@
     </style>
 
     <style name="ExpressivePreferenceRootLayoutStyle">
-        <item name="android:minHeight">72dp</item>
+        <!-- Budík OS: compact iOS-like rows like the homepage (Pixel expressive: 72dp) -->
+        <item name="android:minHeight">@dimen/settingslib_budik_row_min_height</item>
         <item name="android:gravity">center_vertical</item>
         <item name="android:paddingStart">?android:attr/listPreferredItemPaddingStart</item>
         <item name="android:paddingEnd">?android:attr/listPreferredItemPaddingEnd</item>
@@ -118,7 +119,7 @@
         <item name="android:layout_weight">1</item>
         <item name="android:minHeight">@dimen/settingslib_expressive_space_medium3</item>
         <item name="android:gravity">center_vertical</item>
-        <item name="android:paddingVertical">@dimen/settingslib_expressive_space_small1</item>f
+        <item name="android:paddingVertical">@dimen/settingslib_budik_row_padding</item>
         <item name="android:paddingStart">@dimen/settingslib_expressive_space_none</item>
         <item name="android:paddingEnd">@dimen/settingslib_expressive_space_small1</item>
     </style>
@@ -166,7 +167,8 @@
     <style name="ExpressiveTwoTargetDividerViewStyle">
         <item name="android:layout_width">1dp</item>
         <item name="android:layout_height">40dp</item>
-        <item name="android:background">?android:attr/listDivider</item>
+        <!-- Budík OS: no vertical line between the two targets -->
+        <item name="android:background">@null</item>
     </style>
 
     <style name="ExpressivePreferenceCategoryTheme">

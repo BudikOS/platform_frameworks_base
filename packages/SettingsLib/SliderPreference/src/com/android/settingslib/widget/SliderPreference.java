@@ -66,6 +66,7 @@ public class SliderPreference extends Preference {
     private final int mThumbTrackGapSize;
     private final int mTickRadius;
     @Nullable private Slider mSlider;
+    @Nullable private TextView mBudikValue;
     private int mSliderValue;
     private int mMin;
     private int mMax;
@@ -152,6 +153,7 @@ public class SliderPreference extends Preference {
     private final Slider.OnChangeListener mChangeListener = new Slider.OnChangeListener() {
         @Override
         public void onValueChange(@NonNull Slider slider, float value, boolean fromUser) {
+            updateBudikValue(slider);
             if (fromUser && (mUpdatesContinuously || !mTrackingTouch)) {
                 syncValueInternal(slider);
             }
@@ -350,7 +352,7 @@ public class SliderPreference extends Preference {
             Log.e(TAG, "Slider is null in onBindViewHolder.");
             return;
         }
-
+        mBudikValue = (TextView) holder.findViewById(R.id.budik_slider_value);
         if (mShowSliderValue) {
             mSlider.setLabelBehavior(LabelFormatter.LABEL_FLOATING);
         } else {
@@ -402,6 +404,14 @@ public class SliderPreference extends Preference {
             mSlider.setTickActiveRadius(mTickRadius);
             mSlider.setTickInactiveRadius(mTickRadius);
         }
+        // Budík OS: BudikSegmentSlider draws the bar, the Material thumb and ticks stay hidden.
+        mSlider.setThumbStrokeWidth(0);
+        // a thin invisible track keeps Material from widening the side padding
+        mSlider.setTrackHeight(1);
+        mSlider.setThumbWidth(0);
+        mSlider.setHaloRadius(0);
+        mSlider.setTickVisible(false);
+        updateBudikValue(mSlider);
 
         TextView startText = (TextView) holder.findViewById(android.R.id.text1);
         if (mTextStartId > 0 && startText != null) {
@@ -424,6 +434,17 @@ public class SliderPreference extends Preference {
 
         ImageView iconEndView = (ImageView) holder.findViewById(R.id.icon_end);
         updateIconEndIfNeeded(iconEndView);
+    }
+
+    /** Budík OS: value next to the bar in percent, like the control centre brightness. */
+    private void updateBudikValue(@NonNull Slider slider) {
+        if (mBudikValue == null) {
+            return;
+        }
+        final float range = slider.getValueTo() - slider.getValueFrom();
+        final int percent = range > 0
+                ? Math.round((slider.getValue() - slider.getValueFrom()) / range * 100) : 0;
+        mBudikValue.setText(String.valueOf(percent));
     }
 
     /**

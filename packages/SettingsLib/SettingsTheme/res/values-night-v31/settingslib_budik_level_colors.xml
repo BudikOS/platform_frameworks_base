@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Budík OS: attention levels (banner buttons, status icons) in the Budík palette, dark: mint with ink. -->
+<resources>
+    <color name="settingslib_colorBackgroundLevel_high">#21D4BE</color>
+    <color name="settingslib_colorContentLevel_high">#0E0F11</color>
+    <color name="settingslib_colorBackgroundLevel_medium">#21D4BE</color>
+    <color name="settingslib_colorContentLevel_medium">#0E0F11</color>
+    <color name="settingslib_colorBackgroundLevel_low">#21D4BE</color>
+    <color name="settingslib_colorContentLevel_low">#0E0F11</color>
+</resources>

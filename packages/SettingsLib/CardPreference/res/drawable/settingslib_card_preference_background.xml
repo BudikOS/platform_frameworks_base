@@ -14,15 +14,14 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 -->
-
+<!-- Budík OS: cards like the preference groups (surface, 1dp line, radius 20). -->
 <ripple xmlns:android="http://schemas.android.com/apk/res/android"
     android:color="?android:colorControlHighlight">
     <item>
         <shape android:shape="rectangle">
-            <solid
-                android:color="@color/settingslib_materialColorSecondaryContainer" />
-            <corners
-                android:radius="@dimen/settingslib_expressive_radius_extralarge3" />
+            <solid android:color="@color/settingslib_budik_surface" />
+            <stroke android:width="1dp" android:color="@color/settingslib_budik_line" />
+            <corners android:radius="@dimen/settingslib_budik_radius_l" />
         </shape>
     </item>
 </ripple>

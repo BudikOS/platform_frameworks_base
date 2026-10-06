@@ -23,6 +23,8 @@ import android.os.Looper
 import android.util.Log
 import android.util.TypedValue
 import android.view.View
+import android.view.ViewGroup
+import android.widget.ImageView
 import androidx.annotation.DrawableRes
 import androidx.preference.Preference
 import androidx.preference.PreferenceCategory
@@ -66,10 +68,14 @@ open class SettingsPreferenceGroupAdapter @JvmOverloads constructor(
         val context = preferenceGroup.context
         mNormalPaddingStart =
             context.resources.getDimensionPixelSize(R.dimen.settingslib_expressive_space_small1)
-        mGroupPaddingStart = mNormalPaddingStart * 2
+        // Budík OS: cards sit close to the screen edges (iOS-like inset groups)
+        val budikGroupPadding =
+            context.resources.getDimensionPixelSize(R.dimen.settingslib_budik_card_margin) +
+                context.resources.getDimensionPixelSize(R.dimen.settingslib_budik_card_inner)
+        mGroupPaddingStart = budikGroupPadding
         mNormalPaddingEnd =
             context.resources.getDimensionPixelSize(R.dimen.settingslib_expressive_space_small1)
-        mGroupPaddingEnd = mNormalPaddingEnd * 2
+        mGroupPaddingEnd = budikGroupPadding
         val outValue = TypedValue()
         context.theme.resolveAttribute(
             android.R.attr.selectableItemBackground,
@@ -108,10 +114,34 @@ open class SettingsPreferenceGroupAdapter @JvmOverloads constructor(
 
         if (SettingsThemeHelper.isExpressiveTheme(holder.itemView.context)) {
             updateBackground(holder, position)
+            updateChevron(holder, getItem(position))
         }
         val preference = getItem(position)
         val footerData = preference?.key?.let { footerDataMap[it] }
         bindFooter(holder, footerData)
+    }
+
+    /**
+     * Budík OS: a row that opens another page and has no widget of its own gets the iOS-like
+     * chevron of the homepage. Holders are recycled across rows, so a stale one is removed.
+     */
+    private fun updateChevron(holder: PreferenceViewHolder, preference: Preference?) {
+        val frame = holder.findViewById(android.R.id.widget_frame) as? ViewGroup ?: return
+        val chevron = frame.findViewWithTag<View>(CHEVRON_TAG)
+        val opensPage = preference != null && preference !is PreferenceGroup &&
+            preference.widgetLayoutResource == 0 &&
+            (preference.fragment != null || preference.intent != null)
+        if (opensPage && chevron == null) {
+            frame.addView(ImageView(frame.context).apply {
+                tag = CHEVRON_TAG
+                setImageResource(R.drawable.settingslib_expressive_icon_chevron)
+                importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
+            })
+            frame.visibility = View.VISIBLE
+        } else if (!opensPage && chevron != null) {
+            frame.removeView(chevron)
+            if (frame.childCount == 0) frame.visibility = View.GONE
+        }
     }
 
     private fun updatePreferencesList() {
@@ -241,7 +271,9 @@ open class SettingsPreferenceGroupAdapter @JvmOverloads constructor(
         } else { // Handle the background of the preferences that are group divider
             val backgroundRes = getRoundCornerDrawableRes(position, isSelected = false)
             val (paddingStart, paddingEnd) = getStartEndPadding(position)
-            v.clipToOutline = backgroundRes != 0
+            // Budík OS: no outline clip, the ripple masks itself to the card shape and a path
+            // clip per row (rounded top/bottom corners) costs a stencil pass on Adreno 506
+            v.clipToOutline = false
             // Cache the current vertical padding. We must do this before calling
             // setBackgroundResource, because that method resets the View's padding
             // to the drawable's intrinsic padding.
@@ -329,6 +361,7 @@ open class SettingsPreferenceGroupAdapter @JvmOverloads constructor(
 
     companion object {
         private val TAG = "SettingsPrefGroupAdapter"
+        private const val CHEVRON_TAG = "budik_chevron"
         private val STATE_SET_NONE = intArrayOf()
         private val STATE_SET_SINGLE = intArrayOf(android.R.attr.state_single)
         private val STATE_SET_FIRST = intArrayOf(android.R.attr.state_first)

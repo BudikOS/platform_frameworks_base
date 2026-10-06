@@ -37,6 +37,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.android.settingslib.spa.framework.compose.thenIf
 import com.android.settingslib.spa.framework.theme.SettingsDimension
 import com.android.settingslib.spa.framework.theme.SettingsShape
@@ -103,7 +104,8 @@ fun Category(
                         Modifier.fillMaxWidth().clip(SettingsShape.CornerLarge2)
                     },
             verticalArrangement =
-                if (isSpaExpressiveEnabled) Arrangement.spacedBy(SettingsSpace.extraSmall1)
+                // Budík OS: rows touch, the 1dp gap is the divider
+                if (isSpaExpressiveEnabled) Arrangement.spacedBy(1.dp)
                 else Arrangement.Top,
             content = { CompositionLocalProvider(LocalIsInCategory provides true) { content() } },
         )

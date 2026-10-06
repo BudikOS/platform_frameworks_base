@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Budík OS design tokens (export/res/values-night/colors.xml), dark. -->
+<resources>
+    <color name="settingslib_budik_bg">#0E0F11</color>
+    <color name="settingslib_budik_surface">#17191C</color>
+    <color name="settingslib_budik_line">#262A2F</color>
+    <color name="settingslib_budik_border">#3A3F46</color>
+    <color name="settingslib_budik_fg">#F5F6F7</color>
+    <color name="settingslib_budik_fg2">#C4C8CE</color>
+    <color name="settingslib_budik_fg3">#8D949E</color>
+    <color name="settingslib_budik_pixel">#1A1C20</color>
+    <color name="settingslib_budik_primary">#2A4291</color>
+    <color name="settingslib_budik_primary_ink">#0B1E52</color>
+    <color name="settingslib_budik_on_primary">#FFFFFF</color>
+    <color name="settingslib_budik_mint">#21D4BE</color>
+    <color name="settingslib_budik_mint_ink">#05332E</color>
+    <color name="settingslib_budik_ink">#0E0F11</color>
+    <color name="settingslib_budik_inverse">#F5F6F7</color>
+    <color name="settingslib_budik_on_inverse">#0E0F11</color>
+    <color name="settingslib_budik_key_face">#0E0F11</color>
+    <color name="settingslib_budik_key_shadow">#262A2F</color>
+    <color name="settingslib_budik_dialog_shadow">#3A3F46</color>
+    <color name="settingslib_budik_switch_track_off">#262A2F</color>
+    <color name="settingslib_budik_switch_stroke_off">#3A3F46</color>
+    <color name="settingslib_budik_switch_stroke_on">#0E0F11</color>
+    <color name="settingslib_budik_switch_thumb_off">#F5F6F7</color>
+    <color name="settingslib_budik_switch_thumb_on">#0E0F11</color>
+    <color name="settingslib_budik_switch_disabled">#1A1C20</color>
+    <color name="settingslib_budik_switch_thumb_disabled">#262A2F</color>
+</resources>
