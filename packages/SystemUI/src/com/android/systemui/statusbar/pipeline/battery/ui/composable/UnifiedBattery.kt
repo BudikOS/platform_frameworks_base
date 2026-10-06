@@ -18,13 +18,20 @@ package com.android.systemui.statusbar.pipeline.battery.ui.composable
 
 import android.graphics.Rect
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.CornerRadius
@@ -33,11 +40,15 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.CompositingStrategy
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.drawscope.inset
 import androidx.compose.ui.graphics.drawscope.scale
+import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.vector.PathParser
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.Measurable
 import androidx.compose.ui.layout.MeasurePolicy
@@ -47,10 +58,16 @@ import androidx.compose.ui.layout.Placeable
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.layout.onLayoutRectChanged
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.fastFirst
 import androidx.compose.ui.util.fastFirstOrNull
+import com.android.systemui.budik.ui.compose.Budik
 import com.android.systemui.common.ui.compose.load
 import com.android.systemui.compose.modifiers.sysuiResTag
 import com.android.systemui.statusbar.phone.domain.interactor.IsAreaDark
@@ -177,11 +194,10 @@ fun UnifiedBattery(
         }
     }
 
-    BatteryLayout(
-        attribution = viewModel.attribution,
+    BudikBattery(
         levelProvider = { viewModel.level },
-        isFullProvider = { viewModel.isFull },
-        glyphsProvider = { viewModel.glyphList },
+        showPercent = viewModel.glyphList.isNotEmpty(),
+        isCharging = viewModel.attribution == BatteryGlyph.Bolt,
         colorsProvider = colorProvider,
         modifier =
             modifier.sysuiResTag(BatteryViewModel.TEST_TAG).onLayoutRectChanged {
@@ -191,6 +207,77 @@ fun UnifiedBattery(
             },
         contentDescription = viewModel.contentDescription.load() ?: "",
     )
+}
+
+/**
+ * Budík: the battery of export/icons/statusbar (outline, level fill, a bolt while charging) with
+ * the percentage next to it in Instrument Sans with tabular figures, instead of the pill with the
+ * digits drawn inside. Like the AOSP battery it is sized by its height; the colours (for the light
+ * or dark area behind it) are read while drawing.
+ */
+@Composable
+private fun BudikBattery(
+    levelProvider: () -> Int?,
+    showPercent: Boolean,
+    isCharging: Boolean,
+    colorsProvider: () -> BatteryColors,
+    contentDescription: String,
+    modifier: Modifier,
+) {
+    Row(
+        modifier.semantics(mergeDescendants = true) {
+            this.contentDescription = contentDescription
+        },
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        if (showPercent) {
+            BasicText(
+                text = levelProvider()?.toString().orEmpty(),
+                style = Budik.meta(13.sp, Color.Unspecified, FontWeight.SemiBold),
+                color = { colorsProvider().attribution },
+                maxLines = 1,
+            )
+            Spacer(Modifier.width(3.dp))
+        }
+        Canvas(Modifier.fillMaxHeight().aspectRatio(BUDIK_BATTERY_WIDTH / BUDIK_BATTERY_HEIGHT)) {
+            drawBudikBattery(levelProvider(), isCharging, colorsProvider())
+        }
+    }
+}
+
+/** Width and height of the battery in the 24 dp icon grid, strokes included. */
+private const val BUDIK_BATTERY_WIDTH = 22f
+private const val BUDIK_BATTERY_HEIGHT = 12f
+
+private val BudikBolt by lazy {
+    PathParser().parsePathString("M12.2 8.6L8.4 12.6H11L10.2 15.4L14 11.4H11.4Z").toPath()
+}
+
+/** Draws stat_sys_battery_* in the 24 dp grid, cropped to x 1..23, y 6..18. */
+private fun DrawScope.drawBudikBattery(level: Int?, isCharging: Boolean, colors: BatteryColors) {
+    val outline = colors.attribution
+    scale(size.height / BUDIK_BATTERY_HEIGHT, pivot = Offset.Zero) {
+        translate(left = -1f, top = -6f) {
+            drawRoundRect(
+                outline,
+                topLeft = Offset(2f, 7f),
+                size = Size(17f, 10f),
+                cornerRadius = CornerRadius(2.5f),
+                style = Stroke(width = 2f),
+            )
+            drawLine(outline, Offset(21.5f, 10.5f), Offset(21.5f, 13.5f), 2f, StrokeCap.Round)
+            if (isCharging) {
+                drawPath(BudikBolt, outline)
+            } else if (level != null && level > 0) {
+                drawRoundRect(
+                    colors.fill,
+                    topLeft = Offset(4.5f, 9.5f),
+                    size = Size((12f * level / 100f).coerceIn(1f, 12f), 5f),
+                    cornerRadius = CornerRadius(0.75f),
+                )
+            }
+        }
+    }
 }
 
 @Composable
