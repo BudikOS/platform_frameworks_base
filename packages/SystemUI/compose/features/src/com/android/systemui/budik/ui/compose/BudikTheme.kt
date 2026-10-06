@@ -25,7 +25,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.ReadOnlyComposable
@@ -57,11 +56,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 /**
- * Budík OS design tokens for the SystemUI Compose surfaces (export/README.md, tokens.json):
- * radii 6/12/20 dp, hard 0x3 dp shadow without blur, mint #21D4BE never as text on light
- * backgrounds, text on mint is always #0E0F11, navy primary buttons, keycap buttons without key
- * captions, Instrument Sans with tabular figures for metadata, Schibsted Grotesk headlines,
- * Instrument Sans body text.
+ * Budík OS design tokens for the SystemUI Compose surfaces (export/README.md, tokens.json): radii
+ * 6/12/20 dp, hard 0x3 dp shadow without blur, mint #21D4BE never as text on light backgrounds,
+ * text on mint is always #0E0F11, navy primary buttons, keycap buttons without key captions,
+ * Instrument Sans with tabular figures for metadata, Schibsted Grotesk headlines, Instrument Sans
+ * body text.
  */
 object Budik {
     val Ink = Color(0xFF0E0F11)
@@ -217,8 +216,7 @@ object Budik {
 
 /**
  * Draws a keycap: [face] with a hard [shadow] offset [Budik.KeyDepth] below it. The modifier
- * reserves the shadow depth at the bottom of the element; [pressed] sinks the face into the
- * shadow.
+ * reserves the shadow depth at the bottom of the element; [pressed] sinks the face into the shadow.
  */
 fun Modifier.budikKeycap(
     face: Color,
@@ -280,20 +278,6 @@ fun BudikKey(
     )
 }
 
-/** Space kept free at the bottom of a full screen shade sheet for [BudikSheetHandle]. */
-val BudikSheetHandleArea = 24.dp
-
-/** The grab handle at the bottom edge of a full screen shade sheet: drag up to close. */
-@Composable
-fun BudikSheetHandle(modifier: Modifier = Modifier, color: Color = Budik.colors.fg3) {
-    Box(
-        modifier
-            .padding(bottom = 10.dp)
-            .size(width = 40.dp, height = 5.dp)
-            .drawBehind { drawRoundRect(color, cornerRadius = CornerRadius(size.height / 2f)) }
-    )
-}
-
 /** Budík line icons (export/icons/ui, 24 dp grid, stroke 2, round caps and joins). */
 object BudikIcons {
     val Edit by lazy { stroke("M5 19l1-4L15.5 5.5a2.1 2.1 0 0 1 3 3L9 18z") }
@@ -309,6 +293,23 @@ object BudikIcons {
     val Minus by lazy { stroke("M5 12h14") }
     val ChevronUp by lazy { stroke("M6 15l6-6l6 6") }
     val ChevronDown by lazy { stroke("M6 9l6 6l6-6") }
+    val Resize by lazy { stroke("M14 4h6v6M20 4l-7 7", "M10 20H4v-6M4 20l7-7") }
+    val Wifi by lazy {
+        stroke(
+            "M2.5 9a14 14 0 0 1 19 0M5.5 12.5a9.5 9.5 0 0 1 13 0M8.5 16a5 5 0 0 1 7 0",
+            "M12 19.5h.01",
+        )
+    }
+    val Music by lazy {
+        stroke(
+            "M9 18V5l11-2v13",
+            "M6 18a3 3 0 1 0 6 0a3 3 0 1 0 -6 0",
+            "M17 16a3 3 0 1 0 6 0a3 3 0 1 0 -6 0",
+        )
+    }
+    val Previous by lazy { stroke("M19 5L9 12l10 7Z", "M5 5v14") }
+    val Play by lazy { stroke("M7 4.5v15L19.5 12Z") }
+    val Next by lazy { stroke("M5 5l10 7l-10 7Z", "M19 5v14") }
     val Brightness by lazy {
         stroke(
             "M8 12A4 4 0 1 0 16 12A4 4 0 1 0 8 12Z",
@@ -365,6 +366,9 @@ object BudikIcons {
                 fill = SolidColor(glyph),
                 pathFillType = PathFillType.EvenOdd,
             )
-            .addPath(pathData = addPathNodes("M7.22 17.91H16.59V19.97H7.22Z"), fill = SolidColor(Budik.Mint))
+            .addPath(
+                pathData = addPathNodes("M7.22 17.91H16.59V19.97H7.22Z"),
+                fill = SolidColor(Budik.Mint),
+            )
             .build()
 }

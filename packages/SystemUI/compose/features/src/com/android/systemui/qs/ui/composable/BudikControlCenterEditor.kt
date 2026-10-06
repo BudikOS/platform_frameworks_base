@@ -16,15 +16,9 @@
 
 package com.android.systemui.qs.ui.composable
 
-import android.app.ActivityManager
-import android.content.Context
-import android.database.ContentObserver
-import android.os.Handler
-import android.os.Looper
-import android.os.UserHandle
-import android.provider.Settings
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.awaitLongPressOrCancellation
@@ -50,11 +44,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
@@ -66,11 +58,15 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -83,102 +79,30 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.android.systemui.budik.ui.compose.Budik
 import com.android.systemui.budik.ui.compose.BudikIcons
 import com.android.systemui.budik.ui.compose.BudikKey
+import com.android.systemui.budik.ui.compose.BudikSoundPowerIcons
 import com.android.systemui.budik.ui.compose.budikKeycap
+import com.android.systemui.common.shared.model.Icon
+import com.android.systemui.qs.panels.ui.compose.TileListener
 import com.android.systemui.qs.panels.ui.compose.infinitegrid.SmallTileContent
 import com.android.systemui.qs.panels.ui.viewmodel.AvailableEditActions
-import com.android.systemui.qs.panels.ui.viewmodel.EditModeViewModel
-import com.android.systemui.qs.panels.ui.viewmodel.EditTileViewModel
-import com.android.systemui.qs.pipeline.shared.TileSpec
+import com.android.systemui.qs.ui.viewmodel.QuickSettingsContainerViewModel
+import com.android.systemui.volume.panel.component.volume.slider.ui.viewmodel.AudioStreamSliderViewModel
 import kotlin.math.roundToInt
 
-/** Modules of the control centre that the user can switch off; their places are fixed. */
-enum class CcBlock(val title: String) {
-    MEDIA("Média"),
-    BRIGHTNESS("Jas"),
-    VOLUME("Hlasitost"),
-}
+/** Drag of one item of the grid, picked up by a long press. */
+private class ItemDrag(val item: CcItem, val grab: Offset, val itemSize: IntSize) {
+    var pointer by mutableStateOf(Offset.Zero)
+    /** Index in the grid the item would land at, [REMOVE], or null (back where it was). */
+    var target by mutableStateOf<Int?>(null)
 
-/** The hidden control centre modules, kept in Settings.Secure. */
-@Stable
-data class CcBlocks(val hidden: Set<CcBlock>) {
-    fun isShown(block: CcBlock): Boolean = block !in hidden
-
-    fun serialize(): String =
-        CcBlock.entries.joinToString(",") { (if (it in hidden) "!" else "") + it.name }
-
-    fun toggle(block: CcBlock): CcBlocks =
-        copy(hidden = if (block in hidden) hidden - block else hidden + block)
-
-    companion object {
-        /** Settings.Secure key, e.g. "MEDIA,!BRIGHTNESS,VOLUME" (! = hidden). */
-        const val SETTING = "budik_cc_blocks"
-
-        /** Unknown names (e.g. TILES of the first editor) are ignored, so old values still work. */
-        fun parse(value: String?): CcBlocks =
-            CcBlocks(
-                value
-                    .orEmpty()
-                    .split(',')
-                    .map { it.trim() }
-                    .filter { it.startsWith("!") }
-                    .mapNotNull { raw -> CcBlock.entries.firstOrNull { it.name == raw.drop(1) } }
-                    .toSet()
-            )
-
-        fun read(context: Context): CcBlocks =
-            parse(
-                Settings.Secure.getStringForUser(
-                    context.contentResolver,
-                    SETTING,
-                    ActivityManager.getCurrentUser(),
-                )
-            )
-
-        fun write(context: Context, blocks: CcBlocks) {
-            Settings.Secure.putStringForUser(
-                context.contentResolver,
-                SETTING,
-                blocks.serialize(),
-                ActivityManager.getCurrentUser(),
-            )
+    /** [items] with the item moved to [target]. */
+    fun preview(items: List<CcItem>): List<CcItem> {
+        val index = target?.takeIf { it >= 0 } ?: return items
+        return items.toMutableList().apply {
+            remove(item)
+            add(index.coerceIn(0, size), item)
         }
     }
-}
-
-/** The current [CcBlocks], updated when the setting changes. */
-@Composable
-fun rememberCcBlocks(): CcBlocks {
-    val context = LocalContext.current
-    val initial = remember(context) { CcBlocks.read(context) }
-    val blocks by
-        produceState(initial, context) {
-            val observer =
-                object : ContentObserver(Handler(Looper.getMainLooper())) {
-                    override fun onChange(selfChange: Boolean) {
-                        value = CcBlocks.read(context)
-                    }
-                }
-            context.contentResolver.registerContentObserver(
-                Settings.Secure.getUriFor(CcBlocks.SETTING),
-                false,
-                observer,
-                UserHandle.USER_ALL,
-            )
-            awaitDispose { context.contentResolver.unregisterContentObserver(observer) }
-        }
-    return blocks
-}
-
-/** Drag of one tile: from the panel (move or remove) or from the offer (add). */
-private class TileDrag(
-    val spec: TileSpec,
-    val fromCurrent: Boolean,
-    val grab: Offset,
-    val size: IntSize,
-) {
-    var pointer by mutableStateOf(Offset.Zero)
-    /** Index in the panel the tile would land at, [REMOVE], or null (back where it was). */
-    var target by mutableStateOf<Int?>(null)
 
     companion object {
         const val REMOVE = -1
@@ -186,78 +110,96 @@ private class TileDrag(
 }
 
 /**
- * Budík editor of the control centre (replaces the Pixel tile editor): the panel's tiles in the
- * control centre's grid (the first network tiles form the connectivity module), the offer of other
- * tiles below and the media, brightness and volume modules to switch on or off. Tap removes or adds
- * a tile, a long press picks it up to move it, to drop it into the panel or out of it. Tiles are
- * stored as before (sysui_qs_tiles), hidden modules in [CcBlocks.SETTING].
+ * Budík editor of the control centre, in place like the iOS one: the same grid with the same
+ * modules and tiles as the panel, each with "−" to remove it and, where it has more sizes, a key to
+ * resize it. A long press picks an item up to move it; dropped below the grid it is removed. Below
+ * the grid are the modules and tiles that are not in the panel; a tap adds one at the end. Tiles
+ * are stored as before (sysui_qs_tiles), the modules' places and sizes in [CcLayout.SETTING].
  */
 @Composable
-fun BudikControlCenterEditor(viewModel: EditModeViewModel, modifier: Modifier = Modifier) {
+fun BudikControlCenterEditor(
+    containerViewModel: QuickSettingsContainerViewModel,
+    volumeViewModel: AudioStreamSliderViewModel?,
+    modifier: Modifier = Modifier,
+) {
     val cc = ccColors
     val context = LocalContext.current
-    val tiles by viewModel.tiles.collectAsStateWithLifecycle(emptyList())
-    val blocks = rememberCcBlocks()
+    val haptics = LocalHapticFeedback.current
+    val viewModel = containerViewModel.editModeViewModel
+    val editTiles by viewModel.tiles.collectAsStateWithLifecycle(emptyList())
+    val tiles = containerViewModel.tileGridViewModel.tileViewModels
+    val layout = rememberCcLayout()
+    TileListener(tiles) { true }
+    val grid = rememberCcGrid(tiles, layout, containerViewModel, volumeViewModel)
 
     BackHandler { viewModel.stopEditing() }
     DisposableEffect(Unit) { onDispose { viewModel.stopEditing() } }
 
-    val byspec = remember(tiles) { tiles.associateBy { it.tileSpec } }
-    val current = remember(tiles) { tiles.filter { it.isCurrent }.map { it.tileSpec } }
+    val editable = remember(editTiles) { editTiles.associateBy { it.tileSpec } }
     val offer =
-        remember(tiles) {
-            tiles.filter { !it.isCurrent && AvailableEditActions.ADD in it.availableEditActions }
-        }
-
-    var picked by remember { mutableStateOf<TileDrag?>(null) }
-    var pressed by remember { mutableStateOf<EditTileViewModel?>(null) }
-    val preview =
-        picked.let { d ->
-            val t = d?.target
-            when {
-                d == null || t == null || t < 0 -> current
-                else ->
-                    current.toMutableList().apply {
-                        remove(d.spec)
-                        add(t.coerceIn(0, size), d.spec)
-                    }
+        remember(editTiles) {
+            editTiles.filter {
+                !it.isCurrent && AvailableEditActions.ADD in it.availableEditActions
             }
         }
-    val removing = picked?.let { it.fromCurrent && it.target == TileDrag.REMOVE } == true
+    val hiddenBlocks = CcBlock.entries.filter { it !in layout.blocks }
 
-    // Where every key is, to find the one under the finger (keys: true = panel, false = offer).
-    val keyBounds = remember { HashMap<Pair<Boolean, TileSpec>, LayoutCoordinates>() }
+    fun canRemove(item: CcItem) =
+        when (item) {
+            is CcItem.Block -> true
+            is CcItem.Tile -> editable[item.spec]?.isRemovable == true
+        }
+
+    fun canResize(item: CcItem) = item !is CcItem.Block || item.block.sizes.size > 1
+
+    fun name(item: CcItem) =
+        when (item) {
+            is CcItem.Block -> item.block.title
+            is CcItem.Tile -> editable[item.spec]?.label?.text.orEmpty()
+        }
+
+    fun remove(item: CcItem) {
+        if (!canRemove(item)) return
+        val index = grid.items.indexOf(item)
+        val next =
+            when (item) {
+                is CcItem.Block -> layout.hide(item.block, index)
+                is CcItem.Tile -> {
+                    viewModel.removeTile(item.spec)
+                    layout.withoutItemAt(index).copy(wideTiles = layout.wideTiles - item.spec.spec)
+                }
+            }
+        CcLayout.write(context, next)
+    }
+
+    fun move(items: List<CcItem>) {
+        val specs = tiles.map { it.spec }
+        val order =
+            layout.connectivityTiles(specs) + items.filterIsInstance<CcItem.Tile>().map { it.spec }
+        if (order != specs) viewModel.setTiles(order)
+        val next = layout.withOrder(items)
+        if (next != layout) CcLayout.write(context, next)
+    }
+
+    var picked by remember { mutableStateOf<ItemDrag?>(null) }
+    val items = picked?.preview(grid.items) ?: grid.items
+    val removing = picked?.target == ItemDrag.REMOVE
+
+    // Where every item is, to find the one under the finger.
+    val itemBounds = remember { HashMap<CcItem, LayoutCoordinates>() }
     var area by remember { mutableStateOf<LayoutCoordinates?>(null) }
-    var panelGrid by remember { mutableStateOf<LayoutCoordinates?>(null) }
-    val latestPreview by rememberUpdatedState(preview)
-    val latestCurrent by rememberUpdatedState(current)
-    val latestTiles by rememberUpdatedState(byspec)
+    var gridBounds by remember { mutableStateOf<LayoutCoordinates?>(null) }
+    val currentItems by rememberUpdatedState(items)
+    val currentGridItems by rememberUpdatedState(grid.items)
+    val currentMove by rememberUpdatedState(::move)
+    val currentRemove by rememberUpdatedState(::remove)
 
-    fun keyAt(position: Offset): Pair<Boolean, TileSpec>? {
+    fun itemAt(position: Offset): CcItem? {
         val root = area ?: return null
-        return keyBounds.entries
-            .firstOrNull { (_, coords) ->
-                coords.isAttached && root.localBoundingBoxOf(coords).contains(position)
-            }
-            ?.key
-    }
-
-    fun tap(key: Pair<Boolean, TileSpec>) {
-        val tile = latestTiles[key.second] ?: return
-        if (key.first) {
-            if (tile.isRemovable) viewModel.removeTile(key.second)
-        } else {
-            viewModel.addTile(key.second)
-        }
-    }
-
-    fun drop(d: TileDrag) {
-        val t = d.target ?: return
-        when {
-            d.fromCurrent && t == TileDrag.REMOVE ->
-                if (latestTiles[d.spec]?.isRemovable == true) viewModel.removeTile(d.spec)
-            d.fromCurrent -> if (latestPreview != latestCurrent) viewModel.setTiles(latestPreview)
-            t >= 0 -> viewModel.addTile(d.spec, t)
+        return currentItems.firstOrNull { item ->
+            itemBounds[item]?.let {
+                it.isAttached && root.localBoundingBoxOf(it).contains(position)
+            } ?: false
         }
     }
 
@@ -284,17 +226,13 @@ fun BudikControlCenterEditor(viewModel: EditModeViewModel, modifier: Modifier = 
             }
         }
         Spacer(Modifier.height(6.dp))
-        // One line of context: the name of the key under the finger, or how editing works.
-        val hint =
-            when {
-                picked != null && removing -> "Pusťte pro odebrání z panelu"
-                picked != null -> byspec[picked!!.spec]?.label?.text.orEmpty()
-                pressed != null ->
-                    (if (pressed!!.isCurrent) "Odebrat: " else "Přidat: ") + pressed!!.label.text
-                else -> "Klepnutím odeberete nebo přidáte, podržením přesunete."
-            }
         Text(
-            text = hint,
+            text =
+                when {
+                    removing -> "Pusťte pro odebrání z panelu"
+                    picked != null -> name(picked!!.item)
+                    else -> "Podržením přesunete, šipkami změníte velikost."
+                },
             style = Budik.meta(12.sp, cc.textDim),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
@@ -312,31 +250,18 @@ fun BudikControlCenterEditor(viewModel: EditModeViewModel, modifier: Modifier = 
                     .pointerInput(Unit) {
                         awaitEachGesture {
                             val down = awaitFirstDown(requireUnconsumed = false)
-                            val key = keyAt(down.position) ?: return@awaitEachGesture
-                            pressed = latestTiles[key.second]
-                            val long = awaitLongPressOrCancellation(down.id)
-                            pressed = null
-                            if (long == null) {
-                                val up = currentEvent.changes.firstOrNull { it.id == down.id }
-                                if (
-                                    up != null &&
-                                        !up.pressed &&
-                                        !up.isConsumed &&
-                                        (up.position - down.position).getDistance() <
-                                            viewConfiguration.touchSlop
-                                ) {
-                                    tap(key)
-                                }
-                                return@awaitEachGesture
-                            }
-                            val coords = keyBounds[key] ?: return@awaitEachGesture
-                            val bounds = area!!.localBoundingBoxOf(coords)
+                            val item = itemAt(down.position) ?: return@awaitEachGesture
+                            val long =
+                                awaitLongPressOrCancellation(down.id) ?: return@awaitEachGesture
+                            val root = area ?: return@awaitEachGesture
+                            val bounds =
+                                itemBounds[item]?.let { root.localBoundingBoxOf(it) }
+                                    ?: return@awaitEachGesture
                             val d =
-                                TileDrag(
-                                    spec = key.second,
-                                    fromCurrent = key.first,
+                                ItemDrag(
+                                    item = item,
                                     grab = long.position - bounds.topLeft,
-                                    size =
+                                    itemSize =
                                         IntSize(
                                             bounds.width.roundToInt(),
                                             bounds.height.roundToInt(),
@@ -344,194 +269,249 @@ fun BudikControlCenterEditor(viewModel: EditModeViewModel, modifier: Modifier = 
                                 )
                             d.pointer = long.position
                             picked = d
+                            haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                             long.consume()
                             val completed =
                                 drag(long.id) { change ->
                                     d.pointer = change.position
                                     change.consume()
-                                    val over = keyAt(change.position)
+                                    val over = itemAt(change.position)
                                     val gridBottom =
-                                        panelGrid?.let { area!!.localBoundingBoxOf(it).bottom }
+                                        gridBounds?.let { root.localBoundingBoxOf(it).bottom }
                                             ?: Float.MAX_VALUE
                                     d.target =
                                         when {
-                                            over != null && over.first ->
-                                                latestPreview.indexOf(over.second)
-                                            change.position.y > gridBottom ->
-                                                if (d.fromCurrent) TileDrag.REMOVE else null
+                                            over != null -> currentItems.indexOf(over)
+                                            change.position.y > gridBottom -> ItemDrag.REMOVE
                                             else -> d.target
                                         }
                                 }
-                            if (completed) drop(d)
+                            if (completed) {
+                                when (d.target) {
+                                    null -> Unit
+                                    ItemDrag.REMOVE -> currentRemove(d.item)
+                                    else -> currentMove(d.preview(currentGridItems))
+                                }
+                            }
                             picked = null
                         }
                     }
             ) {
-                Column {
-                    Caption("V PANELU")
-                    Column(Modifier.onGloballyPositioned { panelGrid = it }) {
-                        PanelGrid(preview) { spec, keyModifier ->
-                            val tile = byspec[spec]
-                            val ghost = picked?.spec == spec
-                            EditKey(
-                                tile = tile,
-                                badge = if (tile?.isRemovable == true) Badge.Remove else Badge.None,
-                                ghost = ghost,
-                                modifier =
-                                    keyModifier.onGloballyPositioned {
-                                        keyBounds[true to spec] = it
-                                    },
-                            )
-                        }
-                    }
-                    if (offer.isNotEmpty()) {
-                        Spacer(Modifier.height(18.dp))
-                        Caption("PŘIDAT")
-                        offer.chunked(CC_COLUMNS).forEachIndexed { i, row ->
-                            if (i > 0) Spacer(Modifier.height(CcGap))
-                            Row(horizontalArrangement = Arrangement.spacedBy(CcGap)) {
-                                row.forEach { tile ->
-                                    EditKey(
-                                        tile = tile,
-                                        badge = Badge.Add,
-                                        ghost = picked?.spec == tile.tileSpec,
-                                        modifier =
-                                            Modifier.weight(1f).onGloballyPositioned {
-                                                keyBounds[false to tile.tileSpec] = it
-                                            },
-                                    )
-                                }
-                                repeat(CC_COLUMNS - row.size) { Spacer(Modifier.weight(1f)) }
+                Box(Modifier.onGloballyPositioned { gridBounds = it }) {
+                    ModuleGrid(items.map { it.span }) {
+                        items.forEach { item ->
+                            key(item) {
+                                DisposableEffect(Unit) { onDispose { itemBounds.remove(item) } }
+                                EditableItem(
+                                    item = item,
+                                    grid = grid,
+                                    ghost = picked?.item == item,
+                                    onRemove = { remove(item) }.takeIf { canRemove(item) },
+                                    onResize =
+                                        { CcLayout.write(context, layout.resized(item)) }.takeIf {
+                                            canResize(item)
+                                        },
+                                    modifier =
+                                        Modifier.onGloballyPositioned { itemBounds[item] = it },
+                                )
                             }
                         }
                     }
                 }
 
-                // The picked up key follows the finger above everything else.
+                // The picked up item follows the finger above everything else.
                 picked?.let { d ->
                     val density = LocalDensity.current
-                    EditKey(
-                        tile = byspec[d.spec],
-                        badge = Badge.None,
-                        ghost = false,
-                        modifier =
-                            Modifier.offset {
-                                    (d.pointer - d.grab).let {
-                                        IntOffset(it.x.roundToInt(), it.y.roundToInt())
-                                    }
+                    Box(
+                        Modifier.offset {
+                                (d.pointer - d.grab).let {
+                                    IntOffset(it.x.roundToInt(), it.y.roundToInt())
                                 }
-                                .size(
-                                    with(density) { d.size.width.toDp() },
-                                    with(density) { d.size.height.toDp() },
-                                ),
-                    )
+                            }
+                            .size(
+                                with(density) { d.itemSize.width.toDp() },
+                                with(density) { d.itemSize.height.toDp() },
+                            ),
+                        propagateMinConstraints = true,
+                    ) {
+                        CcItemContent(d.item, grid)
+                    }
                 }
             }
 
-            Spacer(Modifier.height(18.dp))
-            Caption("MODULY")
-            CcBlock.entries.forEachIndexed { i, block ->
-                if (i > 0) Spacer(Modifier.height(8.dp))
-                BlockRow(
-                    block = block,
-                    shown = blocks.isShown(block),
-                    onToggle = { CcBlocks.write(context, blocks.toggle(block)) },
-                )
+            if (hiddenBlocks.isNotEmpty() || offer.isNotEmpty()) {
+                Spacer(Modifier.height(24.dp))
+                Caption("PŘIDAT")
+                val addable =
+                    hiddenBlocks.map { block ->
+                        OfferItem(block.title, OfferIcon.Vector(block.icon)) {
+                            CcLayout.write(context, layout.show(block, grid.items.size))
+                        }
+                    } +
+                        offer.map { tile ->
+                            OfferItem(tile.label.text, OfferIcon.Tile(tile.icon)) {
+                                viewModel.addTile(tile.tileSpec)
+                            }
+                        }
+                addable.chunked(CC_COLUMNS).forEachIndexed { i, row ->
+                    if (i > 0) Spacer(Modifier.height(CcGap))
+                    Row(horizontalArrangement = Arrangement.spacedBy(CcGap)) {
+                        row.forEach { OfferKey(it, Modifier.weight(1f)) }
+                        repeat(CC_COLUMNS - row.size) { Spacer(Modifier.weight(1f)) }
+                    }
+                }
             }
             Spacer(Modifier.height(16.dp))
         }
     }
 }
 
-/** The panel's tiles in the control centre's grid of [CC_COLUMNS] square keys. */
-@Composable
-private fun PanelGrid(
-    specs: List<TileSpec>,
-    content: @Composable (spec: TileSpec, modifier: Modifier) -> Unit,
-) {
-    specs.chunked(CC_COLUMNS).forEachIndexed { i, row ->
-        if (i > 0) Spacer(Modifier.height(CcGap))
-        Row(horizontalArrangement = Arrangement.spacedBy(CcGap)) {
-            row.forEach { spec -> key(spec) { content(spec, Modifier.weight(1f)) } }
-            repeat(CC_COLUMNS - row.size) { Spacer(Modifier.weight(1f)) }
+private val CcBlock.icon: ImageVector
+    get() =
+        when (this) {
+            CcBlock.CONNECTIVITY -> BudikIcons.Wifi
+            CcBlock.MEDIA -> BudikIcons.Music
+            CcBlock.BRIGHTNESS -> BudikIcons.Brightness
+            CcBlock.VOLUME -> BudikSoundPowerIcons.Volume
         }
-    }
-}
-
-private enum class Badge {
-    None,
-    Add,
-    Remove,
-}
 
 /**
- * A key of the editor, drawn like a tile of the control centre. [ghost] is the empty slot a picked
- * up key leaves behind.
+ * An item of the grid exactly as in the panel, but inert: the editor handles the gestures. "−"
+ * removes it, the arrows switch its size. [ghost] is the empty slot a picked up item leaves behind.
  */
 @Composable
-private fun EditKey(
-    tile: EditTileViewModel?,
-    badge: Badge,
+private fun EditableItem(
+    item: CcItem,
+    grid: CcGrid,
     ghost: Boolean,
+    onRemove: (() -> Unit)?,
+    onResize: (() -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
     val cc = ccColors
-    val label = tile?.label?.text.orEmpty()
-    Box(
-        modifier
-            .aspectRatio(1f)
-            .semantics { contentDescription = label }
-            .then(
-                if (ghost) {
-                    Modifier.drawBehind {
-                        val w = 1.5.dp.toPx()
-                        drawRoundRect(
-                            cc.textDim,
-                            topLeft = Offset(w / 2f, w / 2f),
-                            size = Size(size.width - w, size.height - Budik.KeyDepth.toPx() - w),
-                            cornerRadius = CornerRadius(Budik.RadiusL.toPx()),
-                            style = Stroke(w),
-                        )
-                    }
-                } else {
-                    Modifier.budikKeycap(cc.module, cc.moduleShadow, Budik.RadiusL)
+    Box(modifier) {
+        if (ghost) {
+            Box(
+                Modifier.matchParentSize().drawBehind {
+                    val w = 1.5.dp.toPx()
+                    drawRoundRect(
+                        cc.textDim,
+                        topLeft = Offset(w / 2f, w / 2f),
+                        size = Size(size.width - w, size.height - Budik.KeyDepth.toPx() - w),
+                        cornerRadius = CornerRadius(Budik.RadiusL.toPx()),
+                        style = Stroke(w),
+                    )
                 }
             )
-    ) {
-        if (!ghost && tile != null) {
-            Column(
-                Modifier.align(Alignment.Center).padding(horizontal = 6.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                SmallTileContent(iconProvider = { tile.icon }, color = cc.onKey, size = { 26.dp })
-                TextIfFits(
-                    text = label,
-                    style = Budik.body(11.sp, cc.onKey, FontWeight.Medium),
-                    modifier = Modifier.padding(top = 6.dp),
-                )
+            return@Box
+        }
+        Box(Modifier.matchParentSize(), propagateMinConstraints = true) {
+            CcItemContent(item, grid)
+        }
+        // Covers the item's own controls (keys, sliders) so that they do nothing while editing.
+        Box(
+            Modifier.matchParentSize().pointerInput(Unit) {
+                awaitPointerEventScope { while (true) awaitPointerEvent() }
             }
-            if (badge != Badge.None) EditBadge(badge)
+        )
+        onRemove?.let { EditBadge(BudikIcons.Minus, "Odebrat", Alignment.TopStart, it) }
+        onResize?.let { EditBadge(BudikIcons.Resize, "Změnit velikost", Alignment.BottomEnd, it) }
+    }
+}
+
+/**
+ * A small round key in a corner of an item ("−" or resize): 22 dp drawn, 44 dp to touch, both
+ * inside the item (touches outside of it would not reach the badge).
+ */
+@Composable
+private fun BoxScope.EditBadge(
+    icon: ImageVector,
+    description: String,
+    corner: Alignment,
+    onClick: () -> Unit,
+) {
+    Box(
+        Modifier.align(corner)
+            .padding(bottom = if (corner == Alignment.BottomEnd) Budik.KeyDepth else 0.dp)
+            .size(EditBadgeTouch)
+            .clickable(
+                interactionSource = null,
+                indication = null,
+                role = Role.Button,
+                onClick = onClick,
+            ),
+        contentAlignment = corner,
+    ) {
+        Box(
+            Modifier.padding(4.dp).size(22.dp).background(ccColors.text, CircleShape),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = description,
+                tint = Budik.colors.bg,
+                modifier = Modifier.size(14.dp),
+            )
         }
     }
 }
 
-/** "−" (remove) or "+" (add) in a small disc at the top start corner of a key. */
+private val EditBadgeTouch = 44.dp
+
+private sealed interface OfferIcon {
+    class Vector(val image: ImageVector) : OfferIcon
+
+    class Tile(val icon: Icon) : OfferIcon
+}
+
+private class OfferItem(val name: String, val icon: OfferIcon, val onAdd: () -> Unit)
+
+/** A module or tile that can be added: its icon and name on a key; a tap adds it. */
 @Composable
-private fun BoxScope.EditBadge(badge: Badge) {
-    val add = badge == Badge.Add
+private fun OfferKey(item: OfferItem, modifier: Modifier = Modifier) {
+    val cc = ccColors
     Box(
-        Modifier.align(Alignment.TopStart)
-            .offset(x = (-5).dp, y = (-5).dp)
-            .size(22.dp)
-            .background(if (add) Budik.Mint else ccColors.text, CircleShape),
-        contentAlignment = Alignment.Center,
+        modifier
+            .aspectRatio(1f)
+            .budikKeycap(cc.module, cc.moduleShadow, Budik.RadiusL)
+            .clickable(
+                interactionSource = null,
+                indication = null,
+                role = Role.Button,
+                onClickLabel = "Přidat",
+                onClick = item.onAdd,
+            )
+            .semantics { contentDescription = item.name }
     ) {
-        Icon(
-            imageVector = if (add) BudikIcons.Plus else BudikIcons.Minus,
-            contentDescription = null,
-            tint = if (add) Budik.Ink else Budik.colors.bg,
-            modifier = Modifier.size(14.dp),
-        )
+        Column(
+            Modifier.align(Alignment.Center).padding(horizontal = 6.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            when (val icon = item.icon) {
+                is OfferIcon.Vector ->
+                    Icon(icon.image, null, tint = cc.onKey, modifier = Modifier.size(26.dp))
+                is OfferIcon.Tile ->
+                    SmallTileContent(
+                        iconProvider = { icon.icon },
+                        color = cc.onKey,
+                        size = { 26.dp },
+                    )
+            }
+            TextIfFits(
+                text = item.name,
+                style = Budik.body(11.sp, cc.onKey, FontWeight.Medium),
+                modifier = Modifier.padding(top = 6.dp),
+            )
+        }
+        Box(
+            Modifier.align(Alignment.TopStart)
+                .padding(4.dp)
+                .size(22.dp)
+                .background(Budik.Mint, CircleShape),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(BudikIcons.Plus, null, tint = Budik.Ink, modifier = Modifier.size(14.dp))
+        }
     }
 }
 
@@ -543,35 +523,4 @@ private fun Caption(text: String) {
         maxLines = 1,
         modifier = Modifier.padding(bottom = 8.dp),
     )
-}
-
-/** One module: its name and whether the control centre shows it. */
-@Composable
-private fun BlockRow(block: CcBlock, shown: Boolean, onToggle: () -> Unit) {
-    val cc = ccColors
-    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
-        Text(
-            text = block.title,
-            style = Budik.body(16.sp, cc.text, FontWeight.SemiBold),
-            maxLines = 1,
-            modifier = Modifier.weight(1f),
-        )
-        BudikKey(
-            face = if (shown) Budik.Mint else cc.module,
-            shadow = if (shown) Budik.MintInk else cc.moduleShadow,
-            radius = Budik.RadiusM,
-            onClick = onToggle,
-            modifier =
-                Modifier.height(51.dp).width(104.dp).semantics {
-                    contentDescription = block.title + if (shown) ", zapnuto" else ", vypnuto"
-                },
-        ) {
-            Text(
-                text = if (shown) "Zapnuto" else "Vypnuto",
-                style = Budik.body(14.sp, if (shown) Budik.Ink else cc.onKey, FontWeight.Bold),
-                maxLines = 1,
-                modifier = Modifier.align(Alignment.Center),
-            )
-        }
-    }
 }

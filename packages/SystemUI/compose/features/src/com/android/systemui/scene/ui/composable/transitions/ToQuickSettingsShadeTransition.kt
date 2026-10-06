@@ -17,13 +17,10 @@
 package com.android.systemui.scene.ui.composable.transitions
 
 import androidx.compose.animation.core.tween
-import androidx.compose.ui.unit.dp
-import com.android.compose.animation.scene.FixedDistance
 import com.android.compose.animation.scene.TransitionBuilder
 import com.android.compose.animation.scene.reveal.ContainerRevealHaptics
 import com.android.mechanics.behavior.VerticalExpandContainerSpec
 import com.android.systemui.qs.ui.composable.QuickSettingsShade
-import com.android.systemui.shade.ui.composable.OverlayShade
 import kotlin.time.Duration.Companion.milliseconds
 
 fun TransitionBuilder.toQuickSettingsShadeTransition(
@@ -33,11 +30,9 @@ fun TransitionBuilder.toQuickSettingsShadeTransition(
 ) {
     spec = tween(durationMillis = (DefaultDuration * durationScale).inWholeMilliseconds.toInt())
 
-    // Budík: instead of the container reveal the screen dims with the finger and the control
-    // centre modules appear on it (BudikControlCenter); nothing is moved by the transition.
-    distance = FixedDistance(320.dp)
+    // Budík: the panel transition shared with the notification shade (no container reveal).
+    budikPanelTransition()
 
-    fractionRange(end = .5f) { fade(OverlayShade.Elements.Scrim) }
     fractionRange(start = .5f) {
         fade(QuickSettingsShade.Elements.StatusBar)
         fade(QuickSettingsShade.Elements.Header)

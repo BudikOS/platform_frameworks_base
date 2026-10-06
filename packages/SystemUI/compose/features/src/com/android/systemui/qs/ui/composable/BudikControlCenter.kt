@@ -43,8 +43,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
@@ -59,17 +61,15 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.CompositingStrategy
-import androidx.compose.ui.graphics.GraphicsLayerScope
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.DrawScope
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.progressBarRangeInfo
 import androidx.compose.ui.semantics.semantics
@@ -80,12 +80,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.android.compose.animation.Expandable
-import com.android.compose.animation.scene.ContentScope
 import com.android.systemui.brightness.domain.model.GammaBrightness
 import com.android.systemui.brightness.ui.viewmodel.BrightnessSliderViewModel
 import com.android.systemui.brightness.ui.viewmodel.Drag
@@ -109,22 +107,15 @@ import com.android.systemui.qs.panels.ui.viewmodel.TileViewModel
 import com.android.systemui.qs.panels.ui.viewmodel.toIconProvider
 import com.android.systemui.qs.panels.ui.viewmodel.toUiState
 import com.android.systemui.qs.panels.ui.viewmodel.toolbar.ToolbarViewModel
+import com.android.systemui.qs.pipeline.shared.TileSpec
 import com.android.systemui.qs.tileimpl.QSTileImpl
 import com.android.systemui.qs.ui.viewmodel.QuickSettingsContainerViewModel
 import com.android.systemui.res.R
-import com.android.systemui.shade.ui.composable.shownFraction
 import com.android.systemui.util.policy.PolicyRestriction
 import com.android.systemui.volume.panel.component.volume.slider.ui.viewmodel.AudioStreamSliderViewModel
 import kotlinx.coroutines.launch
 
-/** Columns of the control centre grid; every module is a multiple of one square cell. */
-internal const val CC_COLUMNS = 4
 internal val CcGap = 12.dp
-
-/** Tiles shown as round keys in the connectivity module, in the user's order. */
-private val CONNECTIVITY_SPECS = setOf("internet", "wifi", "bt", "cell", "airplane", "hotspot")
-private const val CONNECTIVITY_KEYS = 4
-private const val TILES_BEFORE_SLIDERS = 4
 
 /** Control centre colours, following the system light / dark mode. */
 @Immutable
@@ -170,14 +161,14 @@ internal val ccColors: CcColors
     }
 
 /**
- * Budík "Řídicí centrum", laid out like the iOS / HyperOS control centre from the top of the
- * screen: a connectivity module and the media module side by side, a row of tiles, the brightness
- * and volume sliders next to more tiles, the remaining tiles, then edit / settings / power. Every
- * module sits in a grid of square cells and is measured once; while the panel opens or closes the
- * modules only fade and settle with the finger, row by row. A tap on empty space closes it.
+ * Budík "Řídicí centrum", laid out like the iOS control centre from the top of the screen: one grid
+ * of square cells with the modules and tiles the user arranged ([CcLayout]; by default connectivity
+ * and media side by side, a row of tiles, the brightness and volume sliders next to more tiles, the
+ * remaining tiles), then edit / settings / power. The grid is measured once; while the panel opens
+ * or closes only its layer fades with the finger (OverlayShade). A tap on empty space closes it.
  */
 @Composable
-fun ContentScope.BudikControlCenter(
+fun BudikControlCenter(
     containerViewModel: QuickSettingsContainerViewModel,
     volumeViewModel: AudioStreamSliderViewModel?,
     toolbarViewModelFactory: ToolbarViewModel.Factory,
@@ -185,26 +176,10 @@ fun ContentScope.BudikControlCenter(
     modifier: Modifier = Modifier,
 ) {
     val tiles = containerViewModel.tileGridViewModel.tileViewModels
-    val details = containerViewModel.detailsViewModel
-    val blocks = rememberCcBlocks()
+    val layout = rememberCcLayout()
     TileListener(tiles) { true }
+    val grid = rememberCcGrid(tiles, layout, containerViewModel, volumeViewModel)
 
-    val connectivity = tiles.filter { it.spec.spec in CONNECTIVITY_SPECS }.take(CONNECTIVITY_KEYS)
-    val others = tiles - connectivity.toSet()
-    val modules = buildList {
-        if (connectivity.isNotEmpty()) add(CcModule.Connectivity(connectivity))
-        if (blocks.isShown(CcBlock.MEDIA)) add(CcModule.Media)
-        others.take(TILES_BEFORE_SLIDERS).forEach { add(CcModule.Key(it)) }
-        if (blocks.isShown(CcBlock.BRIGHTNESS) && containerViewModel.isBrightnessSliderVisible) {
-            add(CcModule.Brightness)
-        }
-        if (volumeViewModel != null && blocks.isShown(CcBlock.VOLUME)) {
-            add(CcModule.Volume(volumeViewModel))
-        }
-        others.drop(TILES_BEFORE_SLIDERS).forEach { add(CcModule.Key(it)) }
-    }
-
-    val shown = { shownFraction() }
     Box(
         modifier
             .fillMaxSize()
@@ -215,47 +190,75 @@ fun ContentScope.BudikControlCenter(
                 .verticalScroll(rememberScrollState(), overscrollEffect = null)
                 .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 16.dp)
         ) {
-            ModuleGrid(modules.map { it.span }, shown) {
-                modules.forEach { module ->
-                    when (module) {
-                        is CcModule.Connectivity -> ConnectivityModule(module.tiles, details)
-                        CcModule.Media -> MediaModule(containerViewModel)
-                        is CcModule.Key -> TileKey(module.tile, details)
-                        CcModule.Brightness ->
-                            BrightnessModule(containerViewModel.brightnessSliderViewModel)
-                        is CcModule.Volume -> VolumeModule(module.viewModel)
-                    }
-                }
+            ModuleGrid(grid.items.map { it.span }) {
+                grid.items.forEach { item -> key(item) { CcItemContent(item, grid) } }
             }
             Spacer(Modifier.height(16.dp))
-            Footer(
-                toolbarViewModelFactory,
-                Modifier.graphicsLayer { reveal(shown(), MaxRevealDelay) },
-            )
+            Footer(toolbarViewModelFactory)
         }
     }
 }
 
-private sealed class CcModule(val span: Span) {
-    class Connectivity(val tiles: List<TileViewModel>) : CcModule(Span(2, 2))
+/** What the grid shows: its items and everything needed to draw them. */
+@Stable
+internal class CcGrid(
+    val items: List<CcItem>,
+    val tiles: Map<TileSpec, TileViewModel>,
+    val connectivity: List<TileViewModel>,
+    val containerViewModel: QuickSettingsContainerViewModel,
+    val volumeViewModel: AudioStreamSliderViewModel?,
+)
 
-    data object Media : CcModule(Span(2, 2))
-
-    class Key(val tile: TileViewModel) : CcModule(Span(1, 1))
-
-    data object Brightness : CcModule(Span(1, 2))
-
-    class Volume(val viewModel: AudioStreamSliderViewModel) : CcModule(Span(1, 2))
+@Composable
+internal fun rememberCcGrid(
+    tiles: List<TileViewModel>,
+    layout: CcLayout,
+    containerViewModel: QuickSettingsContainerViewModel,
+    volumeViewModel: AudioStreamSliderViewModel?,
+): CcGrid {
+    val brightness = containerViewModel.isBrightnessSliderVisible
+    return remember(tiles, layout, containerViewModel, volumeViewModel, brightness) {
+        val bySpec = tiles.associateBy { it.spec }
+        val specs = tiles.map { it.spec }
+        val available = buildSet {
+            add(CcBlock.CONNECTIVITY)
+            add(CcBlock.MEDIA)
+            if (brightness) add(CcBlock.BRIGHTNESS)
+            if (volumeViewModel != null) add(CcBlock.VOLUME)
+        }
+        CcGrid(
+            items = layout.arrange(specs, available),
+            tiles = bySpec,
+            connectivity = layout.connectivityTiles(specs).mapNotNull { bySpec[it] },
+            containerViewModel = containerViewModel,
+            volumeViewModel = volumeViewModel,
+        )
+    }
 }
 
-internal class Span(val columns: Int, val rows: Int)
-
-/**
- * Lays [content] out in [CC_COLUMNS] square cells, the n-th child sized and placed by [spans], each
- * in its own layer revealed by [shown].
- */
+/** One item of the grid, drawn the same in the panel and in the editor. */
 @Composable
-private fun ModuleGrid(spans: List<Span>, shown: () -> Float, content: @Composable () -> Unit) {
+internal fun CcItemContent(item: CcItem, grid: CcGrid) {
+    val details = grid.containerViewModel.detailsViewModel
+    when (item) {
+        is CcItem.Tile ->
+            grid.tiles[item.spec]?.let {
+                if (item.span == Span.Wide) WideTileKey(it, details) else TileKey(it, details)
+            }
+        is CcItem.Block ->
+            when (item.block) {
+                CcBlock.CONNECTIVITY -> ConnectivityModule(grid.connectivity, item.span, details)
+                CcBlock.MEDIA -> MediaModule(grid.containerViewModel)
+                CcBlock.BRIGHTNESS ->
+                    BrightnessModule(grid.containerViewModel.brightnessSliderViewModel)
+                CcBlock.VOLUME -> grid.volumeViewModel?.let { VolumeModule(it) }
+            }
+    }
+}
+
+/** Lays [content] out in [CC_COLUMNS] square cells, the n-th child sized and placed by [spans]. */
+@Composable
+internal fun ModuleGrid(spans: List<Span>, content: @Composable () -> Unit) {
     Layout(content) { measurables, constraints ->
         val gap = CcGap.roundToPx()
         val cell = (constraints.maxWidth - gap * (CC_COLUMNS - 1)) / CC_COLUMNS
@@ -270,51 +273,9 @@ private fun ModuleGrid(spans: List<Span>, shown: () -> Float, content: @Composab
         val rows = origins.indices.maxOfOrNull { origins[it].y + spans[it].rows } ?: 0
         layout(constraints.maxWidth, if (rows > 0) extent(rows) else 0) {
             placeables.forEachIndexed { i, placeable ->
-                val origin = origins[i]
-                placeable.placeWithLayer(origin.x * (cell + gap), origin.y * (cell + gap)) {
-                    reveal(shown(), (origin.y * RowRevealDelay).coerceAtMost(MaxRevealDelay))
-                }
+                placeable.place(origins[i].x * (cell + gap), origins[i].y * (cell + gap))
             }
         }
-    }
-}
-
-private const val RowRevealDelay = 0.06f
-private const val MaxRevealDelay = 0.3f
-private val RevealOffset = 24.dp
-
-/**
- * A module fades in and settles from slightly above and smaller as [shown] goes past [delay]. The
- * alpha is applied to each draw, so no offscreen layer is needed.
- */
-private fun GraphicsLayerScope.reveal(shown: Float, delay: Float) {
-    val fraction = ((shown - delay) / (1f - MaxRevealDelay)).coerceIn(0f, 1f)
-    alpha = fraction
-    compositingStrategy = CompositingStrategy.ModulateAlpha
-    translationY = -(1f - fraction) * RevealOffset.toPx()
-    scaleX = 0.92f + 0.08f * fraction
-    scaleY = scaleX
-}
-
-/** Puts every module at the first free cell in reading order where it fits (dense packing). */
-internal fun placeModules(spans: List<Span>, columns: Int = CC_COLUMNS): List<IntOffset> {
-    val taken = ArrayList<BooleanArray>()
-    fun isFree(x: Int, y: Int, span: Span): Boolean {
-        for (row in y until y + span.rows) {
-            val cells = taken.getOrNull(row) ?: continue
-            for (column in x until x + span.columns) if (cells[column]) return false
-        }
-        return true
-    }
-    return spans.map { span ->
-        val (x, y) =
-            generateSequence(0) { it + 1 }
-                .firstNotNullOf { y ->
-                    (0..columns - span.columns).firstOrNull { isFree(it, y, span) }?.let { it to y }
-                }
-        while (taken.size < y + span.rows) taken += BooleanArray(columns)
-        for (row in y until y + span.rows) taken[row].fill(true, x, x + span.columns)
-        IntOffset(x, y)
     }
 }
 
@@ -377,9 +338,9 @@ private fun Modifier.tileSemantics(ui: TileUiState): Modifier =
         stateDescription = ui.secondaryLabel
     }
 
-/** A one cell tile: the icon, and its name under it when the name fits uncut. */
+/** A one cell tile: only its icon, like iOS (the name is for TalkBack). */
 @Composable
-private fun TileKey(tile: TileViewModel, details: DetailsViewModel, modifier: Modifier = Modifier) {
+private fun TileKey(tile: TileViewModel, details: DetailsViewModel) {
     val cc = ccColors
     val (ui, icon) = rememberTileState(tile)
     val colors = keyColors(ui, cc.module, cc.moduleShadow)
@@ -389,22 +350,56 @@ private fun TileKey(tile: TileViewModel, details: DetailsViewModel, modifier: Mo
         radius = Budik.RadiusL,
         onClick = { onTileClick(tile, ui, details) },
         onLongClick = { onTileLongClick(tile, ui, details) },
-        modifier = modifier.tileSemantics(ui),
+        modifier = Modifier.tileSemantics(ui),
     ) {
-        Column(
-            Modifier.align(Alignment.Center).padding(horizontal = 6.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
+        SmallTileContent(
+            iconProvider = { tileIcon(icon) },
+            color = colors.content,
+            modifier = Modifier.align(Alignment.Center),
+            size = { 28.dp },
+        )
+    }
+}
+
+/** A two cell tile: the icon, the name and the state (e.g. the Wi-Fi network). */
+@Composable
+private fun WideTileKey(tile: TileViewModel, details: DetailsViewModel) {
+    val cc = ccColors
+    val (ui, icon) = rememberTileState(tile)
+    val colors = keyColors(ui, cc.module, cc.moduleShadow)
+    BudikKey(
+        face = colors.face,
+        shadow = colors.shadow,
+        radius = Budik.RadiusL,
+        onClick = { onTileClick(tile, ui, details) },
+        onLongClick = { onTileLongClick(tile, ui, details) },
+        modifier = Modifier.tileSemantics(ui),
+    ) {
+        Row(
+            Modifier.align(Alignment.CenterStart).padding(horizontal = 14.dp),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             SmallTileContent(
                 iconProvider = { tileIcon(icon) },
                 color = colors.content,
                 size = { 26.dp },
             )
-            TextIfFits(
-                text = ui.label,
-                style = Budik.body(11.sp, colors.content, FontWeight.Medium),
-                modifier = Modifier.padding(top = 6.dp),
-            )
+            Column(Modifier.padding(start = 10.dp)) {
+                Text(
+                    text = ui.label,
+                    style = Budik.body(14.sp, colors.content, FontWeight.SemiBold),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                if (ui.secondaryLabel.isNotEmpty()) {
+                    Text(
+                        text = ui.secondaryLabel,
+                        style = Budik.body(12.sp, colors.content),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+            }
         }
     }
 }
@@ -439,18 +434,18 @@ private fun Modifier.moduleSurface(face: Color, shadow: Color): Modifier =
         }
         .padding(bottom = Budik.KeyDepth)
 
-/** Wi-Fi, Bluetooth, mobile data, airplane mode (whichever are in the panel) as round keys. */
+/** Wi-Fi, Bluetooth, mobile data, airplane mode (the first ones in the panel) as round keys. */
 @Composable
-private fun ConnectivityModule(tiles: List<TileViewModel>, details: DetailsViewModel) {
+private fun ConnectivityModule(tiles: List<TileViewModel>, span: Span, details: DetailsViewModel) {
     val cc = ccColors
     Column(
-        Modifier.moduleSurface(cc.module, cc.moduleShadow).padding(12.dp),
+        Modifier.moduleSurface(cc.module, cc.moduleShadow).padding(horizontal = 12.dp),
         verticalArrangement = Arrangement.SpaceEvenly,
     ) {
-        tiles.chunked(2).forEach { row ->
+        tiles.chunked(span.columns).forEach { row ->
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
                 row.forEach { RoundKey(it, details) }
-                if (row.size == 1) Spacer(Modifier.size(RoundKeySize))
+                repeat(span.columns - row.size) { Spacer(Modifier.size(RoundKeySize)) }
             }
         }
     }
@@ -506,15 +501,7 @@ private fun MediaModule(containerViewModel: QuickSettingsContainerViewModel) {
             defaultMinSize = false,
             modifier = Modifier.fillMaxSize(),
         ) {
-            if (card == null) {
-                Text(
-                    text = "Nic nehraje",
-                    style = Budik.body(14.sp, cc.textDim, FontWeight.Medium),
-                    modifier = Modifier.fillMaxSize().padding(14.dp),
-                )
-            } else {
-                NowPlaying(card)
-            }
+            if (card == null) NothingPlaying() else NowPlaying(card)
         }
     }
 }
@@ -564,6 +551,43 @@ private fun NowPlaying(card: MediaCardViewModel) {
     }
 }
 
+/** The idle media module (iOS "Not Playing"): the same layout, the controls greyed out. */
+@Composable
+private fun NothingPlaying() {
+    val cc = ccColors
+    Column(Modifier.fillMaxSize().padding(14.dp)) {
+        Icon(
+            imageVector = BudikIcons.Music,
+            contentDescription = null,
+            tint = cc.textDim,
+            modifier = Modifier.size(26.dp),
+        )
+        Text(
+            text = "Nic nehraje",
+            style = Budik.body(15.sp, cc.textDim, FontWeight.SemiBold),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.padding(top = 6.dp),
+        )
+        Spacer(Modifier.weight(1f))
+        Row(
+            Modifier.fillMaxWidth().clearAndSetSemantics {},
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            listOf(BudikIcons.Previous, BudikIcons.Play, BudikIcons.Next).forEach {
+                Box(Modifier.size(MediaButtonSize), contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = it,
+                        contentDescription = null,
+                        tint = cc.onKeyDim,
+                        modifier = Modifier.size(26.dp),
+                    )
+                }
+            }
+        }
+    }
+}
+
 @Composable
 private fun MediaAction(action: MediaSecondaryActionViewModel) {
     when (action) {
@@ -600,7 +624,7 @@ private fun BrightnessModule(viewModel: BrightnessSliderViewModel) {
             viewModel.currentBrightness.value != BrightnessSliderViewModel.initialValue.value
         }
     }
-    if (max <= min || !loaded) return
+    val enabled = max > min && loaded
     val restriction by
         viewModel.policyRestriction.collectAsStateWithLifecycle(
             initialValue = PolicyRestriction.NoRestriction
@@ -609,9 +633,12 @@ private fun BrightnessModule(viewModel: BrightnessSliderViewModel) {
     fun gamma(fraction: Float) = GammaBrightness((min + fraction * (max - min)).toInt())
 
     VerticalSlider(
-        fraction = { (viewModel.currentBrightness.value - min).toFloat() / (max - min) },
+        fraction = {
+            if (enabled) (viewModel.currentBrightness.value - min).toFloat() / (max - min) else 0f
+        },
         icon = BudikIcons.Brightness,
         description = "Jas",
+        enabled = enabled,
         onDragStart = {
             (restriction as? PolicyRestriction.Restricted)?.let {
                 viewModel.showPolicyRestrictionDialog(it)
@@ -630,14 +657,16 @@ private fun BrightnessModule(viewModel: BrightnessSliderViewModel) {
 private fun VolumeModule(viewModel: AudioStreamSliderViewModel) {
     val state by viewModel.slider.collectAsStateWithLifecycle()
     val range = state.valueRange
-    if (range.endInclusive <= range.start) return
+    val valid = range.endInclusive > range.start
     fun value(fraction: Float) = range.start + fraction * (range.endInclusive - range.start)
 
     VerticalSlider(
-        fraction = { (state.value - range.start) / (range.endInclusive - range.start) },
+        fraction = {
+            if (valid) (state.value - range.start) / (range.endInclusive - range.start) else 0f
+        },
         icon = BudikSoundPowerIcons.Volume,
         description = state.label.ifEmpty { "Hlasitost" },
-        enabled = state.isEnabled,
+        enabled = state.isEnabled && valid,
         onDragStart = { true },
         onDrag = { viewModel.onValueChanged(state, value(it)) },
         onDragEnd = {
@@ -746,7 +775,7 @@ private fun VerticalSlider(
 private const val IconFillThreshold = 0.18f
 
 @Composable
-private fun Footer(toolbarViewModelFactory: ToolbarViewModel.Factory, modifier: Modifier) {
+private fun Footer(toolbarViewModelFactory: ToolbarViewModel.Factory) {
     val cc = ccColors
     val toolbarViewModel =
         rememberViewModel("BudikControlCenter.Toolbar") { toolbarViewModelFactory.create() }
@@ -754,7 +783,7 @@ private fun Footer(toolbarViewModelFactory: ToolbarViewModel.Factory, modifier: 
         rememberViewModel("BudikControlCenter.Edit") {
             toolbarViewModel.editModeButtonViewModelFactory.create()
         }
-    Row(modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         if (editViewModel.isEditButtonVisible) {
             BudikKey(
                 face = cc.module,

@@ -23,11 +23,11 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import com.android.compose.animation.scene.ContentScope
-import com.android.compose.modifiers.thenIf
 import com.android.systemui.res.R
 import platform.test.motion.compose.values.MotionTestValueKey
 import platform.test.motion.compose.values.motionTestValues
@@ -35,7 +35,7 @@ import platform.test.motion.compose.values.motionTestValues
 /** Renders a scrim for an overlay. */
 @Composable
 fun ContentScope.OverlayScrim(
-    showBackgroundColor: Boolean,
+    backgroundColor: Color?,
     onClicked: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -43,7 +43,6 @@ fun ContentScope.OverlayScrim(
     val closeOverlayBoundingBoxDescription =
         stringResource(R.string.accessibility_close_overlay_box_description)
 
-    val scrimBackgroundColor = OverlayShade.Colors.ScrimBackground
     Spacer(
         modifier =
             modifier
@@ -54,7 +53,7 @@ fun ContentScope.OverlayScrim(
                     }
                 }
                 .fillMaxSize()
-                .thenIf(showBackgroundColor) { Modifier.background(scrimBackgroundColor) }
+                .then(backgroundColor?.let { Modifier.background(it) } ?: Modifier)
                 .clickable(
                     onClick = onClicked,
                     interactionSource = null,

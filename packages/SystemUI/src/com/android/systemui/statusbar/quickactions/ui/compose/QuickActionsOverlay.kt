@@ -81,7 +81,7 @@ constructor(private val viewModelFactory: QuickActionOverlayViewModel.Factory) :
         }
 
         Box(modifier = modifier.fillMaxSize()) {
-            OverlayScrim(onClicked = viewModel::close, showBackgroundColor = false)
+            OverlayScrim(onClicked = viewModel::close, backgroundColor = null)
 
             val popupViewModel =
                 rememberViewModel("popupViewModel", key = activeChip) {

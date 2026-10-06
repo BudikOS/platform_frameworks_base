@@ -33,14 +33,11 @@ import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clipToBounds
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.CornerRadius
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.CompositingStrategy
+import androidx.compose.ui.graphics.GraphicsLayerScope
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.approachLayout
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onPlaced
@@ -81,7 +78,6 @@ fun ContentScope.OverlayShade(
     onBackgroundPlaced: (bounds: Rect, topCornerRadius: Float, bottomCornerRadius: Float) -> Unit =
         { _, _, _ ->
         },
-    dimBehind: Boolean = false,
     header: @Composable () -> Unit,
     content: @Composable () -> Unit,
 ) {
@@ -97,7 +93,15 @@ fun ContentScope.OverlayShade(
         }
 
     Box(modifier) {
-        OverlayScrim(showBackgroundColor = enableTransparency, onClicked = onScrimClicked)
+        OverlayScrim(
+            backgroundColor =
+                when {
+                    isFullWidth -> Colors.panelBackground(enableTransparency)
+                    enableTransparency -> Colors.ScrimBackground
+                    else -> null
+                },
+            onClicked = onScrimClicked,
+        )
 
         Box(
             modifier =
@@ -109,7 +113,6 @@ fun ContentScope.OverlayShade(
                 enableTransparency = enableTransparency,
                 spec = panelSpec,
                 isFullScreen = isFullWidth,
-                dimBehind = dimBehind,
                 modifier =
                     Modifier.overscroll(verticalOverscrollEffect)
                         .element(panelElement)
@@ -180,7 +183,6 @@ private fun ContentScope.Panel(
     enableTransparency: Boolean,
     spec: VerticalExpandContainerSpec,
     isFullScreen: Boolean,
-    dimBehind: Boolean,
     modifier: Modifier = Modifier,
     header: (@Composable () -> Unit)?,
     content: @Composable () -> Unit,
@@ -203,55 +205,44 @@ private fun ContentScope.Panel(
         return
     }
 
-    // Budík: either an opaque full screen sheet with rounded bottom corners and a hard 0 x 3 dp
-    // edge below it, or ([dimBehind]) the screen dimming with the finger under content that
-    // floats on it. No gradient, no blur, no offscreen layer: a frame costs one full screen fill.
-    val background = Colors.panelBackground(enableTransparency)
-    val edge = Budik.colors.border
-    Box(
-        modifier =
-            modifier
-                .disableSwipesWhenScrolling()
-                .then(
-                    if (dimBehind) {
-                        Modifier.drawBehind {
-                            drawRect(background, alpha = DimAlpha * shownFraction())
-                        }
-                    } else {
-                        Modifier.drawBehind { drawSheet(background, edge) }.clipToBounds()
-                    }
-                )
-    ) {
+    // Budík: on phones the panel's content appears on the screen covered by the scrim (OverlayScrim
+    // in the panel background colour). No gradient, no blur, no offscreen layer: a frame costs one
+    // full screen fill plus the content.
+    Box(modifier = modifier.disableSwipesWhenScrolling()) {
         Column(Modifier.fillMaxSize()) {
             header?.invoke()
-            Box(Modifier.weight(1f).fillMaxWidth()) { content() }
+            Box(Modifier.weight(1f).fillMaxWidth().graphicsLayer { reveal(shownFraction()) }) {
+                content()
+            }
         }
     }
 }
 
-/** Opacity of the dimmed screen behind a [dimBehind] panel when it is fully shown. */
-private const val DimAlpha = 0.94f
+private const val RevealDelay = 0.2f
+private val RevealOffset = 24.dp
+
+/**
+ * The content of a full screen panel fades in and settles from slightly above while the screen
+ * darkens. The alpha is applied to each draw (no offscreen buffer) and nothing is scaled, so text
+ * is not rasterised again at another size every frame.
+ */
+private fun GraphicsLayerScope.reveal(shown: Float) {
+    val fraction = ((shown - RevealDelay) / (1f - RevealDelay)).coerceIn(0f, 1f)
+    alpha = fraction
+    compositingStrategy = CompositingStrategy.ModulateAlpha
+    translationY = -(1f - fraction) * RevealOffset.toPx()
+}
 
 /**
  * How much of this content is shown, from 0 (hidden) to 1 (shown); follows the finger while a
  * transition to or from it runs. Read it in the draw or layer phase only.
  */
-fun ContentScope.shownFraction(): Float {
+private fun ContentScope.shownFraction(): Float {
     val transition =
         layoutState.currentTransitions.lastOrNull { it.isTransitioningFromOrTo(contentKey) }
             ?: return 1f
     val progress = transition.progress.coerceIn(0f, 1f)
     return if (transition.toContent == contentKey) progress else 1f - progress
-}
-
-/** The sheet's background with rounded bottom corners, the hard edge only where it shows. */
-private fun DrawScope.drawSheet(background: Color, edge: Color) {
-    val corner = CornerRadius(Budik.RadiusL.toPx())
-    val bottom = Size(size.width, corner.y * 2f)
-    val bottomTop = size.height - bottom.height
-    drawRoundRect(edge, Offset(0f, bottomTop + Budik.KeyDepth.toPx()), bottom, corner)
-    drawRect(background, size = Size(size.width, size.height - corner.y))
-    drawRoundRect(background, Offset(0f, bottomTop), bottom, corner)
 }
 
 @Composable

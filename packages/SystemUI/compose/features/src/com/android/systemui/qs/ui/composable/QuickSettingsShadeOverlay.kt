@@ -207,7 +207,6 @@ constructor(
                         )
                     )
                 },
-                dimBehind = true,
                 header = {
                     if (contentViewModel.showHeader) {
                         val headerViewModel = quickSettingsContainerViewModel.shadeHeaderViewModel
@@ -304,7 +303,8 @@ private fun ContentScope.QuickSettingsContainer(
             ShadeBodyState.Editing -> {
                 // Budík: own editor in the control centre's style instead of the Pixel one.
                 BudikControlCenterEditor(
-                    viewModel = containerViewModel.editModeViewModel,
+                    containerViewModel = containerViewModel,
+                    volumeViewModel = contentViewModel.volumeSliderViewModel,
                     modifier = modifier,
                 )
             }

@@ -17,7 +17,6 @@
 package com.android.systemui.notifications.ui.composable
 
 import androidx.compose.foundation.focusable
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -27,7 +26,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusProperties
@@ -44,8 +42,6 @@ import com.android.compose.animation.scene.UserActionResult
 import com.android.compose.lifecycle.DisposableEffectWithLifecycle
 import com.android.compose.lifecycle.LaunchedEffectWithLifecycle
 import com.android.internal.jank.InteractionJankMonitor
-import com.android.systemui.budik.ui.compose.BudikSheetHandle
-import com.android.systemui.budik.ui.compose.BudikSheetHandleArea
 import com.android.systemui.dagger.SysUISingleton
 import com.android.systemui.keyguard.ui.composable.elements.LockscreenElements
 import com.android.systemui.lifecycle.rememberViewModel
@@ -55,7 +51,6 @@ import com.android.systemui.notifications.intelligence.rules.shared.NmContextual
 import com.android.systemui.notifications.intelligence.rules.ui.viewmodel.NotificationRulesParentViewModel
 import com.android.systemui.notifications.ui.viewmodel.NotificationsShadeOverlayActionsViewModel
 import com.android.systemui.notifications.ui.viewmodel.NotificationsShadeOverlayContentViewModel
-import com.android.systemui.plugins.keyguard.ui.composable.elements.LockscreenElementKeys
 import com.android.systemui.res.R
 import com.android.systemui.scene.session.ui.composable.SaveableSession
 import com.android.systemui.scene.shared.model.Overlays
@@ -164,63 +159,60 @@ constructor(
 
             val accessibilityTitle = stringResource(R.string.accessibility_desc_notification_shade)
 
-            Box(Modifier.fillMaxSize()) {
-                Column(
-                    modifier =
-                        Modifier.fillMaxSize()
-                            .padding(bottom = BudikSheetHandleArea)
-                            .focusRequester(focusRequester)
-                            .focusable()
-                            .semantics { paneTitle = accessibilityTitle }
-                ) {
-                    // Budík: large clock + date, media, then the receipt card. The notification
-                    // stack keeps a zero-height placeholder below so its lifecycle (expansion,
-                    // HUNs, clear all) works as in AOSP while the rows themselves are not shown.
-                    BudikShadeClock(
-                        Modifier.padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 12.dp)
-                    )
-                    if (viewModel.showMedia) {
-                        Element(
-                            key = Media.Elements.MediaCarousel,
-                            modifier = Modifier.padding(horizontal = 12.dp).padding(bottom = 12.dp),
-                        ) {
-                            Media(
-                                viewModelFactory = viewModel.mediaViewModelFactory,
-                                presentationStyle = MediaPresentationStyle.Default,
-                                behavior = viewModel.mediaUiBehavior,
-                                onDismissed = viewModel::onMediaSwipeToDismiss,
-                                location = Media.Location.SHADE,
-                            )
-                        }
+            Column(
+                modifier =
+                    Modifier.fillMaxSize()
+                        .padding(bottom = 16.dp)
+                        .focusRequester(focusRequester)
+                        .focusable()
+                        .semantics { paneTitle = accessibilityTitle }
+            ) {
+                // Budík: large clock + date, media, then the receipt card. The notification
+                // stack keeps a zero-height placeholder below so its lifecycle (expansion,
+                // HUNs, clear all) works as in AOSP while the rows themselves are not shown.
+                BudikShadeClock(
+                    Modifier.padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 12.dp)
+                )
+                if (viewModel.showMedia) {
+                    Element(
+                        key = Media.Elements.MediaCarousel,
+                        modifier = Modifier.padding(horizontal = 12.dp).padding(bottom = 12.dp),
+                    ) {
+                        Media(
+                            viewModelFactory = viewModel.mediaViewModelFactory,
+                            presentationStyle = MediaPresentationStyle.Default,
+                            behavior = viewModel.mediaUiBehavior,
+                            onDismissed = viewModel::onMediaSwipeToDismiss,
+                            location = Media.Location.SHADE,
+                        )
                     }
-                    BudikNotificationReceipt(
-                        actions = budikActions,
-                        modifier = Modifier.padding(horizontal = 12.dp).weight(1f, fill = false),
-                    )
-                    Spacer(Modifier.height(12.dp))
-                    val stackScrollView = stackScrollView.get()
-                    ScrollingNotificationPanel(
-                        tag = "NotifShadeOverlay",
-                        shadeSession = shadeSession,
-                        stackScrollView = stackScrollView,
-                        viewModel = placeholderViewModel,
-                        notificationRulesParentViewModel = notificationRulesParentViewModel,
-                        jankMonitor = jankMonitor,
-                        shouldPunchHoleBehindScrim = false,
-                        isTransparencyEnabled = viewModel.isTransparencyEnabled,
-                        stackTopPadding = notificationStackPadding,
-                        stackBottomPadding = { notificationStackPadding },
-                        aboveNotifications = {},
-                        shouldDrawScrimBackground = false,
-                        modifier =
-                            Modifier.fillMaxWidth().height(0.dp).focusProperties {
-                                // The `ScrollingNotificationPanel` is a compose placeholder. Therefore,
-                                // focus on the view that actually shows notifications.
-                                onEnter = { stackScrollView.asView().requestFocus() }
-                            },
-                    )
                 }
-                BudikSheetHandle(Modifier.align(Alignment.BottomCenter))
+                BudikNotificationReceipt(
+                    actions = budikActions,
+                    modifier = Modifier.padding(horizontal = 12.dp).weight(1f, fill = false),
+                )
+                Spacer(Modifier.height(12.dp))
+                val stackScrollView = stackScrollView.get()
+                ScrollingNotificationPanel(
+                    tag = "NotifShadeOverlay",
+                    shadeSession = shadeSession,
+                    stackScrollView = stackScrollView,
+                    viewModel = placeholderViewModel,
+                    notificationRulesParentViewModel = notificationRulesParentViewModel,
+                    jankMonitor = jankMonitor,
+                    shouldPunchHoleBehindScrim = false,
+                    isTransparencyEnabled = viewModel.isTransparencyEnabled,
+                    stackTopPadding = notificationStackPadding,
+                    stackBottomPadding = { notificationStackPadding },
+                    aboveNotifications = {},
+                    shouldDrawScrimBackground = false,
+                    modifier =
+                        Modifier.fillMaxWidth().height(0.dp).focusProperties {
+                            // The `ScrollingNotificationPanel` is a compose placeholder. Therefore,
+                            // focus on the view that actually shows notifications.
+                            onEnter = { stackScrollView.asView().requestFocus() }
+                        },
+                )
             }
         }
     }

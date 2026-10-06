@@ -24,7 +24,6 @@ import com.android.systemui.notifications.ui.composable.Notifications
 import com.android.systemui.notifications.ui.composable.NotificationsShade
 import com.android.systemui.plugins.keyguard.ui.composable.elements.LockscreenElementKeys
 import com.android.systemui.scene.shared.model.Overlays
-import com.android.systemui.shade.ui.composable.OverlayShade
 import kotlin.time.Duration.Companion.milliseconds
 
 fun TransitionBuilder.toNotificationsShadeTransition(
@@ -53,12 +52,11 @@ fun TransitionBuilder.toNotificationsShadeTransition(
         enabled = enableSharedElements,
     )
 
-    // Budík: full screen sheet sliding with the finger instead of the container reveal.
-    budikSheetSlide(NotificationsShade.Elements.Panel)
+    // Budík: the panel transition shared with the control centre (no container reveal).
+    budikPanelTransition()
 
     fractionRange(start = .16f, end = 0.8f) { fade(NotificationsShade.Elements.StatusBar) }
     fractionRange(start = .33f, end = 0.8f) { fade(Notifications.Elements.StackPlaceholder) }
-    fractionRange(end = .5f) { fade(OverlayShade.Elements.Scrim) }
 }
 
 private val DefaultDuration = 300.milliseconds
