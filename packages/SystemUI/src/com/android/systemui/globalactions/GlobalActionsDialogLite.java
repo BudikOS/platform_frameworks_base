@@ -190,6 +190,10 @@ public class GlobalActionsDialogLite implements DialogInterface.OnDismissListene
     @VisibleForTesting
     static final String GLOBAL_ACTION_KEY_FEEDBACK = "feedback";
 
+    /** Budík OS power menu card (export/mockups 09_power), see {@link BudikPowerMenu}. */
+    private static final boolean BUDIK_POWER_MENU = true;
+    private static final int BUDIK_MAX_ITEMS = 12;
+
     private static final boolean DEBUG = false;
 
     private static final String TAG = "GlobalActionsDialogLite";
@@ -607,7 +611,8 @@ public class GlobalActionsDialogLite implements DialogInterface.OnDismissListene
         WindowManager.LayoutParams attrs = dialog.getWindow().getAttributes();
         attrs.setTitle("GlobalActionsDialogLite");
         attrs.layoutInDisplayCutoutMode = LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS;
-        if (isVolumeAndPowerBlurEnabled() && mTranslucentPowerMenu) {
+        // Budík OS: no blur behind the power menu (design rule, and cheaper).
+        if (false && isVolumeAndPowerBlurEnabled() && mTranslucentPowerMenu) {
             attrs.flags |= WindowManager.LayoutParams.FLAG_BLUR_BEHIND;
             attrs.setBlurBehindRadius(mContext.getResources().getDimensionPixelSize(
                     com.android.systemui.res.R.dimen.global_actions_blur_radius));
@@ -638,6 +643,10 @@ public class GlobalActionsDialogLite implements DialogInterface.OnDismissListene
      * layout is being used.
      */
     private int getMaxShownPowerItems() {
+        // Budík OS: BudikPowerMenu shows every action in its own grid, no overflow menu.
+        if (BUDIK_POWER_MENU) {
+            return BUDIK_MAX_ITEMS;
+        }
         return mResources.getInteger(com.android.systemui.res.R.integer.power_menu_lite_max_columns)
                 * mResources.getInteger(
                     com.android.systemui.res.R.integer.power_menu_lite_max_rows);
@@ -2829,6 +2838,14 @@ public class GlobalActionsDialogLite implements DialogInterface.OnDismissListene
             mGlobalActionsLayout.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
             mGlobalActionsLayout.setRotationListener(this::onRotate);
             mGlobalActionsLayout.setAdapter(mAdapter);
+            if (BUDIK_POWER_MENU) {
+                BudikPowerMenu.attach(
+                        dialog.findViewById(com.android.systemui.res.R.id.global_actions_container),
+                        mGlobalActionsLayout,
+                        mGlobalActionsLayout.findViewById(android.R.id.list),
+                        (MyAdapter) mAdapter,
+                        this::dismissWithoutAnimation);
+            }
             final WindowRootViewBlurInteractor blurInteractor = dialog.getBlurInteractor();
             collectFlow(mGlobalActionsLayout, blurInteractor.isBlurCurrentlySupported(),
                     mGlobalActionsLayout::setIsBlurSupported);

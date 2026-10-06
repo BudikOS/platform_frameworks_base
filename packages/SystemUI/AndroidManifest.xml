@@ -231,6 +231,9 @@
 
     <!-- Access battery information -->
     <uses-permission android:name="android.permission.BATTERY_STATS" />
+    <!-- Budík OS power menu: "Pokročilý restart" (recovery, bootloader, safe mode) -->
+    <uses-permission android:name="android.permission.REBOOT" />
+    <uses-permission android:name="android.permission.RECOVERY" />
 
     <!-- DevicePolicyManager get user restrictions -->
     <uses-permission android:name="android.permission.MANAGE_PROFILE_AND_DEVICE_OWNERS" />
