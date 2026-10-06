@@ -53,6 +53,8 @@
 
      - Swiping from the start edge to this boundary opens Notifications.
      - Swiping from this boundary to the end edge opens Quick Settings.
+
+     Budík: halves, so the control centre is in reach of the right thumb (One UI, HyperOS).
     -->
-    <item name="config_invocationGestureSplitRatio" format="float" type="dimen">0.75</item>
+    <item name="config_invocationGestureSplitRatio" format="float" type="dimen">0.5</item>
 </resources>

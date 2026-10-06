@@ -76,6 +76,12 @@ fun dualShadeActions(
                 // Don't add the "single pointer swipe down" actions for PointerType.Mouse because
                 // it is easy to accidentally trigger them when trying to dragging windows.
                 add(Swipe.Down(pointerType = it) to Overlays.NotificationsShade)
+                // Budík: swiping down anywhere on the end half (e.g. the home screen) opens the
+                // control centre too, not only from the top edge (HyperOS).
+                add(
+                    Swipe.Down(fromSource = SceneContainerArea.EndHalf, pointerType = it) to
+                        Overlays.QuickSettingsShade
+                )
                 add(
                     Swipe.Down(fromSource = SceneContainerArea.TopEdgeEndHalf, pointerType = it) to
                         Overlays.QuickSettingsShade

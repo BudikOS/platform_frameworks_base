@@ -51,14 +51,16 @@ constructor(private val editModeViewModel: EditModeViewModel) : UserActionsViewM
                         put(Swipe.Up, hideQuickSettings)
                     }
 
-                    put(
-                        Swipe.Down(fromSource = TopEdgeStartHalf),
+                    val showNotifications =
                         ShowOverlay(
                             Overlays.NotificationsShade,
                             hideCurrentOverlays =
                                 HideCurrentOverlays.Some(Overlays.QuickSettingsShade),
-                        ),
-                    )
+                        )
+                    put(Swipe.Down(fromSource = TopEdgeStartHalf), showNotifications)
+                    // Budík: a sideways swipe towards the end brings in the notifications (not
+                    // while editing, where a picked up module moves sideways).
+                    if (!isEditing) put(Swipe.End, showNotifications)
                 }
             }
             .collect { actions -> setActions(actions) }

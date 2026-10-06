@@ -22,6 +22,7 @@ import com.android.systemui.scene.shared.model.TransitionKeys.ToSplitShade
 import com.android.systemui.scene.ui.composable.transitions.aodToGoneTransition
 import com.android.systemui.scene.ui.composable.transitions.bouncerToGoneTransition
 import com.android.systemui.scene.ui.composable.transitions.bouncerToLockscreenTransition
+import com.android.systemui.scene.ui.composable.transitions.budikPanelSwitchTransition
 import com.android.systemui.scene.ui.composable.transitions.communalToGoneTransition
 import com.android.systemui.scene.ui.composable.transitions.communalToQuickSettingsTransition
 import com.android.systemui.scene.ui.composable.transitions.communalToSingleShadeTransition
@@ -524,6 +525,10 @@ class SceneContainerTransitions : SceneContainerTransitionsBuilder {
                         revealHaptics = revealHaptics,
                     )
                 }
+            }
+            // Budík: a sideways swipe switches between the panels over the shared dimmed screen.
+            from(Overlays.NotificationsShade, to = Overlays.QuickSettingsShade) {
+                budikPanelSwitchTransition()
             }
             from(
                 Scenes.Gone,

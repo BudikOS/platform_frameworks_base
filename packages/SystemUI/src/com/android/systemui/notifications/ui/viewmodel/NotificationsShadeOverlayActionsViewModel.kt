@@ -34,15 +34,18 @@ class NotificationsShadeOverlayActionsViewModel @AssistedInject constructor() :
     UserActionsViewModel() {
 
     override suspend fun hydrateActions(setActions: (Map<UserAction, UserActionResult>) -> Unit) {
+        val showQuickSettings =
+            ShowOverlay(
+                Overlays.QuickSettingsShade,
+                hideCurrentOverlays = HideCurrentOverlays.Some(Overlays.NotificationsShade),
+            )
         setActions(
             mapOf(
                 Swipe.Up to HideOverlay(Overlays.NotificationsShade),
                 Back to HideOverlay(Overlays.NotificationsShade),
-                Swipe.Down(fromSource = TopEdgeEndHalf) to
-                    ShowOverlay(
-                        Overlays.QuickSettingsShade,
-                        hideCurrentOverlays = HideCurrentOverlays.Some(Overlays.NotificationsShade),
-                    ),
+                Swipe.Down(fromSource = TopEdgeEndHalf) to showQuickSettings,
+                // Budík: a sideways swipe towards the start brings in the control centre.
+                Swipe.Start to showQuickSettings,
             )
         )
     }

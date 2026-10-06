@@ -16,10 +16,12 @@
 
 package com.android.systemui.scene.ui.composable.transitions
 
+import androidx.compose.animation.core.tween
 import androidx.compose.ui.unit.dp
 import com.android.compose.animation.scene.FixedDistance
 import com.android.compose.animation.scene.TransitionBuilder
 import com.android.systemui.shade.ui.composable.OverlayShade
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Budík: the one transition of the notification shade and the control centre. The screen dims under
@@ -33,3 +35,11 @@ fun TransitionBuilder.budikPanelTransition() {
 }
 
 private val PanelSwipeDistance = 320.dp
+
+/** Switching between the notification shade and the control centre with a sideways swipe. */
+fun TransitionBuilder.budikPanelSwitchTransition() {
+    spec = tween(durationMillis = PanelSwitchDuration.inWholeMilliseconds.toInt())
+    distance = FixedDistance(PanelSwipeDistance)
+}
+
+private val PanelSwitchDuration = 300.milliseconds
