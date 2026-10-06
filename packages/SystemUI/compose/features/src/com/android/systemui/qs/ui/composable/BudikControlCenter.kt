@@ -108,9 +108,9 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 /** Tiles in the first row: icon-only keys with the label under the key. */
-private const val SMALL_KEYS = 6
+internal const val SMALL_KEYS = 6
 /** Tiles per row below: large keys with the label inside. */
-private const val LARGE_KEYS_PER_ROW = 4
+internal const val LARGE_KEYS_PER_ROW = 4
 private const val BRIGHTNESS_SEGMENTS = 20
 
 /**
@@ -163,46 +163,32 @@ fun ContentScope.BudikControlCenter(
         Column(
             Modifier.fillMaxWidth().weight(1f, fill = false).verticalScroll(rememberScrollState())
         ) {
-            if (containerViewModel.showMedia) {
-                Media(
-                    viewModelFactory = containerViewModel.mediaViewModelFactory,
-                    presentationStyle = MediaPresentationStyle.Compact,
-                    behavior = QuickSettingsContainerViewModel.mediaUiBehavior,
-                    onDismissed = containerViewModel::onMediaSwipeToDismiss,
-                    modifier = Modifier,
-                    location = Media.Location.QS,
-                )
-                Spacer(Modifier.height(12.dp))
-            }
-
-            val details = containerViewModel.detailsViewModel
-            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                tiles.take(SMALL_KEYS).forEach { tile ->
-                    SmallKey(tile, details, onTapped, Modifier.weight(1f))
-                }
-                repeat(SMALL_KEYS - tiles.size.coerceAtMost(SMALL_KEYS)) {
-                    Spacer(Modifier.weight(1f))
-                }
-            }
-
-            val large: List<TileViewModel?> = tiles.drop(SMALL_KEYS) + listOf(null)
-            large.chunked(LARGE_KEYS_PER_ROW).forEach { row ->
-                Spacer(Modifier.height(10.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    row.forEach { tile ->
-                        if (tile != null) {
-                            LargeKey(tile, details, onTapped, Modifier.weight(1f))
-                        } else {
-                            DoneKey(onDone, Modifier.weight(1f))
-                        }
+            // Blocks in the order and visibility chosen in the editor (CcBlocks).
+            val blocks =
+                rememberCcBlocks().visible.filter {
+                    when (it) {
+                        CcBlock.MEDIA -> containerViewModel.showMedia
+                        CcBlock.BRIGHTNESS -> containerViewModel.isBrightnessSliderVisible
+                        CcBlock.TILES -> true
                     }
-                    repeat(LARGE_KEYS_PER_ROW - row.size) { Spacer(Modifier.weight(1f)) }
                 }
-            }
-
-            if (containerViewModel.isBrightnessSliderVisible) {
-                Spacer(Modifier.height(14.dp))
-                SegmentedBrightness(containerViewModel.brightnessSliderViewModel)
+            blocks.forEachIndexed { i, block ->
+                if (i > 0) Spacer(Modifier.height(14.dp))
+                when (block) {
+                    CcBlock.MEDIA ->
+                        Media(
+                            viewModelFactory = containerViewModel.mediaViewModelFactory,
+                            presentationStyle = MediaPresentationStyle.Compact,
+                            behavior = QuickSettingsContainerViewModel.mediaUiBehavior,
+                            onDismissed = containerViewModel::onMediaSwipeToDismiss,
+                            modifier = Modifier,
+                            location = Media.Location.QS,
+                        )
+                    CcBlock.TILES ->
+                        Tiles(tiles, containerViewModel.detailsViewModel, onTapped, onDone)
+                    CcBlock.BRIGHTNESS ->
+                        SegmentedBrightness(containerViewModel.brightnessSliderViewModel)
+                }
             }
 
             Spacer(Modifier.height(16.dp))
@@ -210,6 +196,40 @@ fun ContentScope.BudikControlCenter(
             Spacer(Modifier.height(12.dp))
         }
         BudikSheetHandle(Modifier.align(Alignment.CenterHorizontally), color = c.ccText)
+    }
+}
+
+@Composable
+private fun Tiles(
+    tiles: List<TileViewModel>,
+    details: DetailsViewModel,
+    onTapped: (TileViewModel) -> Unit,
+    onDone: () -> Unit,
+) {
+    Column {
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            tiles.take(SMALL_KEYS).forEach { tile ->
+                SmallKey(tile, details, onTapped, Modifier.weight(1f))
+            }
+            repeat(SMALL_KEYS - tiles.size.coerceAtMost(SMALL_KEYS)) {
+                Spacer(Modifier.weight(1f))
+            }
+        }
+
+        val large: List<TileViewModel?> = tiles.drop(SMALL_KEYS) + listOf(null)
+        large.chunked(LARGE_KEYS_PER_ROW).forEach { row ->
+            Spacer(Modifier.height(10.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                row.forEach { tile ->
+                    if (tile != null) {
+                        LargeKey(tile, details, onTapped, Modifier.weight(1f))
+                    } else {
+                        DoneKey(onDone, Modifier.weight(1f))
+                    }
+                }
+                repeat(LARGE_KEYS_PER_ROW - row.size) { Spacer(Modifier.weight(1f)) }
+            }
+        }
     }
 }
 
@@ -341,7 +361,7 @@ private fun Modifier.tileSemantics(ui: TileUiState): Modifier =
 
 /** Shows [text] only when it fits in one line without being cut; otherwise nothing. */
 @Composable
-private fun TextIfFits(text: String, style: TextStyle, modifier: Modifier = Modifier) {
+internal fun TextIfFits(text: String, style: TextStyle, modifier: Modifier = Modifier) {
     Layout(
         content = { Text(text = text, style = style, maxLines = 1, softWrap = false) },
         modifier = modifier,

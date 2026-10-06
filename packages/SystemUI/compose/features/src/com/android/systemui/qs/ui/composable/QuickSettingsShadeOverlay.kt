@@ -93,7 +93,6 @@ import com.android.systemui.notifications.ui.composable.BudikShadeClock
 import com.android.systemui.notifications.ui.composable.SnoozableHeadsUpNotificationPlaceholder
 import com.android.systemui.qs.composefragment.ui.GridAnchor
 import com.android.systemui.qs.flags.QsDetailedView
-import com.android.systemui.qs.panels.ui.compose.EditMode
 import com.android.systemui.qs.panels.ui.compose.TileDetails
 import com.android.systemui.qs.panels.ui.compose.TileGrid
 import com.android.systemui.qs.panels.ui.compose.toolbar.Toolbar
@@ -303,16 +302,10 @@ private fun ContentScope.QuickSettingsContainer(
     ) { state ->
         when (state) {
             ShadeBodyState.Editing -> {
-                EditMode(
-                    viewModel = containerViewModel.editModeViewModel,
-                    modifier =
-                        modifier
-                            .fillMaxWidth()
-                            .padding(
-                                horizontal = QuickSettingsShade.Dimensions.HorizontalPadding,
-                                vertical = QuickSettingsShade.Dimensions.VerticalPadding,
-                            ),
-                )
+                // Budík: own editor in the control centre's style instead of the Pixel one.
+                Box(modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {
+                    BudikControlCenterEditor(viewModel = containerViewModel.editModeViewModel)
+                }
             }
 
             ShadeBodyState.TileDetails -> {

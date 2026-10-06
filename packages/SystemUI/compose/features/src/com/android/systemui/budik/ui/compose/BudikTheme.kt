@@ -305,6 +305,10 @@ object BudikIcons {
             "M7 16a2 2 0 1 0 4 0a2 2 0 1 0 -4 0",
         )
     }
+    val Plus by lazy { stroke("M12 5v14M5 12h14") }
+    val Minus by lazy { stroke("M5 12h14") }
+    val ChevronUp by lazy { stroke("M6 15l6-6l6 6") }
+    val ChevronDown by lazy { stroke("M6 9l6 6l6-6") }
     val Brightness by lazy {
         stroke(
             "M8 12A4 4 0 1 0 16 12A4 4 0 1 0 8 12Z",
