@@ -32,6 +32,7 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -42,7 +43,6 @@ import androidx.compose.foundation.gestures.drag
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -137,8 +137,8 @@ import kotlinx.coroutines.flow.onEach
 
 /**
  * Budík OS volume dialog (export/mockups 08_volume). Like on iOS and Pixel a volume key first shows
- * one slider of the active stream at the edge, with a key that expands the card to the ringer
- * mode segment, three vertical sliders (media, ringer, alarm) and a "Zvuk" key opening the sound
+ * one slider of the active stream at the edge, with a key that expands the card to the ringer mode
+ * segment, three vertical sliders (media, ringer, alarm) and a "Zvuk" key opening the sound
  * settings. It replaces the AOSP view binders but keeps their state, visibility and dismiss logic.
  */
 @VolumeDialogScope
@@ -274,7 +274,9 @@ private fun BudikVolumeDialog(
                         radius = Budik.RadiusL,
                         border = colors.line,
                     )
-                    .animateContentSize(spring(Spring.DampingRatioNoBouncy, Spring.StiffnessMediumLow))
+                    .animateContentSize(
+                        spring(Spring.DampingRatioNoBouncy, Spring.StiffnessMediumLow)
+                    )
                     .padding(12.dp)
                     .width(if (expanded) SliderWidth * 3 + SliderGap * 2 else SliderWidth),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -323,10 +325,10 @@ private fun budikSliders(
         state.streamModels[state.activeStream]?.takeIf { it.stream !in FixedStreams }
             ?: state.streamModels[AudioManager.STREAM_MUSIC]
     return listOfNotNull(
-        first?.let { it to firstLabel(context, it) },
-        state.streamModels[AudioManager.STREAM_RING]?.let { it to "Vyzvánění" },
-        state.streamModels[AudioManager.STREAM_ALARM]?.let { it to "Budík" },
-    )
+            first?.let { it to firstLabel(context, it) },
+            state.streamModels[AudioManager.STREAM_RING]?.let { it to "Vyzvánění" },
+            state.streamModels[AudioManager.STREAM_ALARM]?.let { it to "Budík" },
+        )
         .map { (model, label) -> Triple(model, label, iconFor(model.stream)) }
 }
 
@@ -482,9 +484,17 @@ private fun VolumeSlider(
                             drawPath(track, colors.bg)
                             val top = size.height * (1f - fraction)
                             clipPath(track) {
-                                drawRect(Budik.Mint, Offset(0f, top), Size(size.width, size.height - top))
+                                drawRect(
+                                    Budik.Mint,
+                                    Offset(0f, top),
+                                    Size(size.width, size.height - top),
+                                )
                                 if (fraction > 0f && fraction < 1f) {
-                                    drawRect(Budik.Ink, Offset(0f, top - edge / 2f), Size(size.width, edge))
+                                    drawRect(
+                                        Budik.Ink,
+                                        Offset(0f, top - edge / 2f),
+                                        Size(size.width, edge),
+                                    )
                                 }
                             }
                             drawRoundRect(
@@ -510,7 +520,8 @@ private fun VolumeSlider(
         Spacer(Modifier.height(8.dp))
         BasicText(
             text = label,
-            style = Budik.body(15.sp, colors.fg, FontWeight.Bold).copy(textAlign = TextAlign.Center),
+            style =
+                Budik.body(15.sp, colors.fg, FontWeight.Bold).copy(textAlign = TextAlign.Center),
             maxLines = 1,
             softWrap = false,
             overflow = TextOverflow.Visible,
@@ -548,7 +559,11 @@ private fun ExpandKey(onExpand: () -> Unit) {
         Canvas(Modifier.align(Alignment.Center).size(24.dp, 6.dp)) {
             val radius = size.height / 2f
             for (i in 0..2) {
-                drawCircle(colors.fg, radius, Offset(radius + i * (size.width - 2 * radius) / 2f, radius))
+                drawCircle(
+                    colors.fg,
+                    radius,
+                    Offset(radius + i * (size.width - 2 * radius) / 2f, radius),
+                )
             }
         }
     }

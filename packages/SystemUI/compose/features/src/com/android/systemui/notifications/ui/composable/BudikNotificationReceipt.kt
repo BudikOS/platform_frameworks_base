@@ -132,9 +132,9 @@ data class BudikNotificationItem(
 
 /**
  * Data and actions of the Budík notification receipt. Reads the same list the notification stack
- * shows (after all filtering, incl. the lock screen) and acts on the notifications like the
- * stack rows do: open = content intent (dismissing the keyguard) + click report (auto cancel),
- * dismiss = user dismissal, clear all = the stack's clear all.
+ * shows (after all filtering, incl. the lock screen) and acts on the notifications like the stack
+ * rows do: open = content intent (dismissing the keyguard) + click report (auto cancel), dismiss =
+ * user dismissal, clear all = the stack's clear all.
  */
 class BudikNotificationActions(
     private val repository: ActiveNotificationListRepository,
@@ -156,7 +156,9 @@ class BudikNotificationActions(
      * icon for the system and for apps without one. Decoded off the main thread, [sizePx] square.
      */
     suspend fun appIcon(item: BudikNotificationItem, context: Context, sizePx: Int): BudikAppIcon? {
-        icons[item.iconKey]?.let { return it }
+        icons[item.iconKey]?.let {
+            return it
+        }
         val sbn = notifPipeline.get().getEntry(item.key)?.sbn ?: return null
         val smallIcon = sbn.notification.smallIcon
         val icon =
@@ -173,7 +175,9 @@ class BudikNotificationActions(
                             }
                         }
                         ?.takeIf { it.icon != 0 }
-                app?.loadIcon(pm)?.let { BudikAppIcon(it.toBitmap(sizePx, sizePx).asImageBitmap(), false) }
+                app?.loadIcon(pm)?.let {
+                    BudikAppIcon(it.toBitmap(sizePx, sizePx).asImageBitmap(), false)
+                }
                     ?: smallIcon?.loadDrawable(context)?.let {
                         BudikAppIcon(it.toBitmap(sizePx, sizePx).asImageBitmap(), true)
                     }
@@ -194,10 +198,9 @@ class BudikNotificationActions(
         val intent = entry.sbn.notification.contentIntent ?: return
         val key = entry.key
         activityStarter.get().startPendingIntentDismissingKeyguard(intent) {
-            clickNotifier.get().onNotificationClick(
-                key,
-                NotificationVisibility.obtain(key, rank, count, true),
-            )
+            clickNotifier
+                .get()
+                .onNotificationClick(key, NotificationVisibility.obtain(key, rank, count, true))
         }
     }
 
@@ -286,8 +289,10 @@ class BudikNotificationActions(
 
     private fun lastMessage(n: Notification): Pair<CharSequence?, CharSequence>? {
         val messages =
-            n.extras.getParcelableArray(Notification.EXTRA_MESSAGES, android.os.Parcelable::class.java)
-                ?: return null
+            n.extras.getParcelableArray(
+                Notification.EXTRA_MESSAGES,
+                android.os.Parcelable::class.java,
+            ) ?: return null
         val last =
             Notification.MessagingStyle.Message.getMessagesFromBundleArray(messages).lastOrNull()
                 ?: return null
@@ -305,8 +310,7 @@ class BudikNotificationActions(
 }
 
 /** An app icon for a receipt row; a [monochrome] small icon is tinted like text. */
-@Immutable
-class BudikAppIcon(val bitmap: ImageBitmap, val monochrome: Boolean)
+@Immutable class BudikAppIcon(val bitmap: ImageBitmap, val monochrome: Boolean)
 
 private const val ICON_CACHE_SIZE = 48
 private val SYSTEM_PACKAGES = setOf("android", "com.android.systemui")
@@ -335,14 +339,16 @@ fun BudikShadeClock(modifier: Modifier = Modifier) {
             }
         }
     val is24 = DateFormat.is24HourFormat(context)
-    val time = remember(now, locale, is24) { dateFormat(locale, if (is24) "Hm" else "hm").format(Date(now)) }
-    val date = remember(now, locale) { dateFormat(locale, "EEEdMMMM").format(Date(now)).capitalized(locale) }
+    val time =
+        remember(now, locale, is24) {
+            dateFormat(locale, if (is24) "Hm" else "hm").format(Date(now))
+        }
+    val date =
+        remember(now, locale) {
+            dateFormat(locale, "EEEdMMMM").format(Date(now)).capitalized(locale)
+        }
     Row(modifier, verticalAlignment = Alignment.Bottom) {
-        Text(
-            text = time,
-            style = Budik.headline(46.sp, c.fg, FontWeight.ExtraBold),
-            maxLines = 1,
-        )
+        Text(text = time, style = Budik.headline(46.sp, c.fg, FontWeight.ExtraBold), maxLines = 1)
         Spacer(Modifier.width(10.dp))
         Text(
             text = date,
@@ -406,9 +412,7 @@ fun ContentScope.BudikNotificationReceipt(
         } else {
             LazyColumn(
                 modifier =
-                    Modifier.fillMaxWidth()
-                        .weight(1f, fill = false)
-                        .disableSwipesWhenScrolling()
+                    Modifier.fillMaxWidth().weight(1f, fill = false).disableSwipesWhenScrolling()
             ) {
                 items(items, key = { it.key }) { item ->
                     val index = items.indexOf(item)
@@ -482,10 +486,10 @@ private val AppIconFrame = 36.dp
 private val AppIconSize = 26.dp
 
 /**
- * A row that can be swiped away sideways, like a row of the notification stack: past 40 % of
- * the width (or flung) it slides out and is dismissed, otherwise it springs back. Rows that
- * cannot be dismissed (ongoing) only follow the finger a little and spring back. Only the
- * row's layer moves, nothing is re-measured while dragging.
+ * A row that can be swiped away sideways, like a row of the notification stack: past 40 % of the
+ * width (or flung) it slides out and is dismissed, otherwise it springs back. Rows that cannot be
+ * dismissed (ongoing) only follow the finger a little and spring back. Only the row's layer moves,
+ * nothing is re-measured while dragging.
  */
 @Composable
 private fun SwipeToDismiss(
@@ -535,7 +539,9 @@ private fun SwipeToDismiss(
 private fun newWord(count: Int) =
     when (count) {
         1 -> "nové"
-        2, 3, 4 -> "nová"
+        2,
+        3,
+        4 -> "nová"
         else -> "nových"
     }
 
@@ -562,9 +568,10 @@ private fun ReceiptRow(
     val c = Budik.colors
     val context = LocalContext.current
     val is24 = DateFormat.is24HourFormat(context)
-    val time = remember(item.time, locale, is24) {
-        dateFormat(locale, if (is24) "Hm" else "hm").format(Date(item.time))
-    }
+    val time =
+        remember(item.time, locale, is24) {
+            dateFormat(locale, if (is24) "Hm" else "hm").format(Date(item.time))
+        }
     if (showDivider) Rule(thick = false)
     val outer =
         if (item.isNew) {
@@ -672,12 +679,7 @@ private fun ActionKey(label: String, primary: Boolean, onClick: () -> Unit) {
     ) {
         Text(
             text = label,
-            style =
-                Budik.body(
-                    15.sp,
-                    if (primary) Color.White else c.fg,
-                    FontWeight.Bold,
-                ),
+            style = Budik.body(15.sp, if (primary) Color.White else c.fg, FontWeight.Bold),
             maxLines = 1,
             modifier = Modifier.align(Alignment.Center).padding(horizontal = 16.dp),
         )

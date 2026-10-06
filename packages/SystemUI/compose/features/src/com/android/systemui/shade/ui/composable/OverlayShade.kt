@@ -59,11 +59,10 @@ import com.android.compose.modifiers.thenIf
 import com.android.mechanics.behavior.VerticalExpandContainerSpec
 import com.android.mechanics.behavior.verticalExpandContainerBackground
 import com.android.mechanics.compose.modifier.motionDriver
-import com.android.systemui.qs.ui.composable.TileRevealFlag
 import com.android.systemui.budik.ui.compose.Budik
+import com.android.systemui.qs.ui.composable.TileRevealFlag
 import com.android.systemui.res.R
 import com.android.systemui.scene.ui.composable.LocalSceneContainerPreloadedResources
-import com.android.systemui.shade.ui.ShadeColors.shadePanel
 import com.android.systemui.shade.ui.ShadeColors.shadePanelScrimBehind
 import com.android.systemui.shade.ui.composable.OverlayShade.Colors
 import com.android.systemui.shade.ui.composable.OverlayShade.Dimensions
@@ -211,13 +210,17 @@ private fun ContentScope.Panel(
     val edge = Budik.colors.border
     Box(
         modifier =
-            modifier.disableSwipesWhenScrolling().then(
-                if (dimBehind) {
-                    Modifier.drawBehind { drawRect(background, alpha = DimAlpha * shownFraction()) }
-                } else {
-                    Modifier.drawBehind { drawSheet(background, edge) }.clipToBounds()
-                }
-            )
+            modifier
+                .disableSwipesWhenScrolling()
+                .then(
+                    if (dimBehind) {
+                        Modifier.drawBehind {
+                            drawRect(background, alpha = DimAlpha * shownFraction())
+                        }
+                    } else {
+                        Modifier.drawBehind { drawSheet(background, edge) }.clipToBounds()
+                    }
+                )
     ) {
         Column(Modifier.fillMaxSize()) {
             header?.invoke()

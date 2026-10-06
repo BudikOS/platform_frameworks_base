@@ -61,9 +61,9 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.GraphicsLayerScope
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.Layout
@@ -189,8 +189,7 @@ fun ContentScope.BudikControlCenter(
     val blocks = rememberCcBlocks()
     TileListener(tiles) { true }
 
-    val connectivity =
-        tiles.filter { it.spec.spec in CONNECTIVITY_SPECS }.take(CONNECTIVITY_KEYS)
+    val connectivity = tiles.filter { it.spec.spec in CONNECTIVITY_SPECS }.take(CONNECTIVITY_KEYS)
     val others = tiles - connectivity.toSet()
     val modules = buildList {
         if (connectivity.isNotEmpty()) add(CcModule.Connectivity(connectivity))
@@ -207,7 +206,9 @@ fun ContentScope.BudikControlCenter(
 
     val shown = { shownFraction() }
     Box(
-        modifier.fillMaxSize().clickable(interactionSource = null, indication = null, onClick = onDismiss)
+        modifier
+            .fillMaxSize()
+            .clickable(interactionSource = null, indication = null, onClick = onDismiss)
     ) {
         Column(
             Modifier.fillMaxWidth()
@@ -250,8 +251,8 @@ private sealed class CcModule(val span: Span) {
 internal class Span(val columns: Int, val rows: Int)
 
 /**
- * Lays [content] out in [CC_COLUMNS] square cells, the n-th child sized and placed by [spans],
- * each in its own layer revealed by [shown].
+ * Lays [content] out in [CC_COLUMNS] square cells, the n-th child sized and placed by [spans], each
+ * in its own layer revealed by [shown].
  */
 @Composable
 private fun ModuleGrid(spans: List<Span>, shown: () -> Float, content: @Composable () -> Unit) {
@@ -394,7 +395,11 @@ private fun TileKey(tile: TileViewModel, details: DetailsViewModel, modifier: Mo
             Modifier.align(Alignment.Center).padding(horizontal = 6.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            SmallTileContent(iconProvider = { tileIcon(icon) }, color = colors.content, size = { 26.dp })
+            SmallTileContent(
+                iconProvider = { tileIcon(icon) },
+                color = colors.content,
+                size = { 26.dp },
+            )
             TextIfFits(
                 text = ui.label,
                 style = Budik.body(11.sp, colors.content, FontWeight.Medium),
@@ -412,7 +417,9 @@ internal fun TextIfFits(text: String, style: TextStyle, modifier: Modifier = Mod
         modifier = modifier,
     ) { measurables, constraints ->
         val line =
-            measurables.first().measure(constraints.copy(minWidth = 0, maxWidth = Constraints.Infinity))
+            measurables
+                .first()
+                .measure(constraints.copy(minWidth = 0, maxWidth = Constraints.Infinity))
         if (line.width <= constraints.maxWidth) {
             layout(line.width, line.height) { line.place(0, 0) }
         } else {
@@ -488,7 +495,9 @@ private fun MediaModule(containerViewModel: QuickSettingsContainerViewModel) {
     LaunchedEffect(viewModel) { viewModel.setVisibility { true } }
     val card = viewModel.cards.getOrNull(viewModel.currentIndex) ?: viewModel.cards.firstOrNull()
 
-    Box(Modifier.drawBehind { drawModuleShadow(cc.moduleShadow) }.padding(bottom = Budik.KeyDepth)) {
+    Box(
+        Modifier.drawBehind { drawModuleShadow(cc.moduleShadow) }.padding(bottom = Budik.KeyDepth)
+    ) {
         Expandable(
             color = cc.module,
             shape = RoundedCornerShape(Budik.RadiusL),
@@ -524,7 +533,9 @@ private fun DrawScope.drawModuleShadow(color: Color) {
 private fun NowPlaying(card: MediaCardViewModel) {
     val cc = ccColors
     Column(
-        Modifier.fillMaxSize().padding(14.dp).semantics { contentDescription = card.contentDescription }
+        Modifier.fillMaxSize().padding(14.dp).semantics {
+            contentDescription = card.contentDescription
+        }
     ) {
         Text(
             text = card.title,

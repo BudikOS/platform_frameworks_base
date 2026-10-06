@@ -187,10 +187,10 @@ private class TileDrag(
 
 /**
  * Budík editor of the control centre (replaces the Pixel tile editor): the panel's tiles in the
- * control centre's grid (the first network tiles form the connectivity module), the offer of
- * other tiles below and the media, brightness and volume modules to switch on or off. Tap removes
- * or adds a tile, a long press picks it up to move it, to drop it into the panel or out of it.
- * Tiles are stored as before (sysui_qs_tiles), hidden modules in [CcBlocks.SETTING].
+ * control centre's grid (the first network tiles form the connectivity module), the offer of other
+ * tiles below and the media, brightness and volume modules to switch on or off. Tap removes or adds
+ * a tile, a long press picks it up to move it, to drop it into the panel or out of it. Tiles are
+ * stored as before (sysui_qs_tiles), hidden modules in [CcBlocks.SETTING].
  */
 @Composable
 fun BudikControlCenterEditor(viewModel: EditModeViewModel, modifier: Modifier = Modifier) {
@@ -465,8 +465,8 @@ private enum class Badge {
 }
 
 /**
- * A key of the editor, drawn like a tile of the control centre. [ghost] is the empty slot a
- * picked up key leaves behind.
+ * A key of the editor, drawn like a tile of the control centre. [ghost] is the empty slot a picked
+ * up key leaves behind.
  */
 @Composable
 private fun EditKey(
@@ -488,8 +488,7 @@ private fun EditKey(
                         drawRoundRect(
                             cc.textDim,
                             topLeft = Offset(w / 2f, w / 2f),
-                            size =
-                                Size(size.width - w, size.height - Budik.KeyDepth.toPx() - w),
+                            size = Size(size.width - w, size.height - Budik.KeyDepth.toPx() - w),
                             cornerRadius = CornerRadius(Budik.RadiusL.toPx()),
                             style = Stroke(w),
                         )

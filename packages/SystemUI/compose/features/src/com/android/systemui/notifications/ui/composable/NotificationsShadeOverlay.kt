@@ -47,6 +47,7 @@ import com.android.internal.jank.InteractionJankMonitor
 import com.android.systemui.budik.ui.compose.BudikSheetHandle
 import com.android.systemui.budik.ui.compose.BudikSheetHandleArea
 import com.android.systemui.dagger.SysUISingleton
+import com.android.systemui.dagger.qualifiers.Background
 import com.android.systemui.keyguard.ui.composable.elements.LockscreenElements
 import com.android.systemui.lifecycle.rememberViewModel
 import com.android.systemui.media.remedia.ui.compose.Media
@@ -70,7 +71,6 @@ import com.android.systemui.statusbar.notification.collection.NotifPipeline
 import com.android.systemui.statusbar.notification.data.repository.ActiveNotificationListRepository
 import com.android.systemui.statusbar.notification.row.OnUserInteractionCallback
 import com.android.systemui.statusbar.notification.stack.ui.view.NotificationScrollView
-import com.android.systemui.dagger.qualifiers.Background
 import dagger.Lazy
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineDispatcher
@@ -195,9 +195,9 @@ constructor(
                             .focusable()
                             .semantics { paneTitle = accessibilityTitle }
                 ) {
-                    // Budík: large clock + date, media, then the receipt card. The notification stack
-                    // keeps a zero-height placeholder below so its lifecycle (expansion, HUNs, clear
-                    // all) works as in AOSP while the rows themselves are not shown.
+                    // Budík: large clock + date, media, then the receipt card. The notification
+                    // stack keeps a zero-height placeholder below so its lifecycle (expansion,
+                    // HUNs, clear all) works as in AOSP while the rows themselves are not shown.
                     BudikShadeClock(
                         Modifier.padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 12.dp)
                     )
