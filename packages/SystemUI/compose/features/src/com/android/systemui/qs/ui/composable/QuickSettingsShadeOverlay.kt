@@ -89,7 +89,6 @@ import com.android.systemui.development.ui.viewmodel.BuildNumberViewModel
 import com.android.systemui.lifecycle.rememberViewModel
 import com.android.systemui.media.remedia.ui.compose.Media
 import com.android.systemui.media.remedia.ui.compose.MediaPresentationStyle
-import com.android.systemui.notifications.ui.composable.BudikShadeClock
 import com.android.systemui.notifications.ui.composable.SnoozableHeadsUpNotificationPlaceholder
 import com.android.systemui.qs.composefragment.ui.GridAnchor
 import com.android.systemui.qs.flags.QsDetailedView
@@ -303,9 +302,10 @@ private fun ContentScope.QuickSettingsContainer(
         when (state) {
             ShadeBodyState.Editing -> {
                 // Budík: own editor in the control centre's style instead of the Pixel one.
-                Box(modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {
-                    BudikControlCenterEditor(viewModel = containerViewModel.editModeViewModel)
-                }
+                BudikControlCenterEditor(
+                    viewModel = containerViewModel.editModeViewModel,
+                    modifier = modifier,
+                )
             }
 
             ShadeBodyState.TileDetails -> {
@@ -317,26 +317,20 @@ private fun ContentScope.QuickSettingsContainer(
             }
 
             ShadeBodyState.Default -> {
-                // Budík: own control centre instead of QuickSettingsLayout: the large clock on
-                // top and the dark sheet anchored to the bottom edge (05_quick_settings).
+                // Budík: own control centre instead of QuickSettingsLayout, laid out from the
+                // top of the sheet like the iOS control centre.
                 Column(modifier = modifier.fillMaxSize().sysuiResTag("quick_settings_panel")) {
                     QuickSettingsOverlayPrivacyChip(
                         containerViewModel.shadeHeaderViewModel,
                         modifier = Modifier.padding(horizontal = 16.dp),
                     )
-                    BudikShadeClock(
-                        Modifier.padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 12.dp)
+                    BudikControlCenter(
+                        containerViewModel = containerViewModel,
+                        volumeViewModel = contentViewModel.volumeSliderViewModel,
+                        toolbarViewModelFactory = contentViewModel.toolbarViewModelFactory,
+                        onDismiss = contentViewModel::onScrimClicked,
+                        modifier = Modifier.weight(1f),
                     )
-                    Box(
-                        modifier = Modifier.weight(1f).fillMaxWidth(),
-                        contentAlignment = Alignment.BottomCenter,
-                    ) {
-                        BudikControlCenter(
-                            containerViewModel = containerViewModel,
-                            toolbarViewModelFactory = contentViewModel.toolbarViewModelFactory,
-                            onDone = contentViewModel::onScrimClicked,
-                        )
-                    }
                 }
             }
         }

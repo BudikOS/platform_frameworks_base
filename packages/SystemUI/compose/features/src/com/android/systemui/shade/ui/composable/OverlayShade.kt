@@ -17,7 +17,6 @@
 package com.android.systemui.shade.ui.composable
 
 import android.annotation.SuppressLint
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -29,19 +28,19 @@ import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.overscroll
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.CompositingStrategy
-import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.layout.approachLayout
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onPlaced
@@ -203,36 +202,32 @@ private fun ContentScope.Panel(
     }
 
     // Budík: an opaque full screen sheet with rounded bottom corners and a hard 0 x 3 dp edge
-    // below it (no gradient, no blur). While it slides, the sheet is one offscreen layer, so a
-    // frame only moves an already rendered texture instead of drawing the whole panel again.
+    // below it (no gradient, no blur). It is drawn directly, without an offscreen layer or a
+    // shaped clip, so a frame of the slide costs one full screen fill plus the content.
+    val background = Colors.panelBackground(enableTransparency)
     val edge = Budik.colors.border
-    val shape = remember { RoundedCornerShape(bottomStart = Budik.RadiusL, bottomEnd = Budik.RadiusL) }
     Box(
         modifier =
             modifier
                 .disableSwipesWhenScrolling()
-                .drawBehind {
-                    drawRoundRect(
-                        edge,
-                        topLeft = Offset(0f, Budik.KeyDepth.toPx()),
-                        size = size,
-                        cornerRadius = CornerRadius(Budik.RadiusL.toPx()),
-                    )
-                }
-                .graphicsLayer {
-                    this.shape = shape
-                    clip = true
-                    compositingStrategy =
-                        if (layoutState.isTransitioning()) CompositingStrategy.Offscreen
-                        else CompositingStrategy.Auto
-                }
-                .background(Colors.panelBackground(enableTransparency))
+                .drawBehind { drawSheet(background, edge) }
+                .clipToBounds()
     ) {
         Column(Modifier.fillMaxSize()) {
             header?.invoke()
             Box(Modifier.weight(1f).fillMaxWidth()) { content() }
         }
     }
+}
+
+/** The sheet's background with rounded bottom corners, the hard edge only where it shows. */
+private fun DrawScope.drawSheet(background: Color, edge: Color) {
+    val corner = CornerRadius(Budik.RadiusL.toPx())
+    val bottom = Size(size.width, corner.y * 2f)
+    val bottomTop = size.height - bottom.height
+    drawRoundRect(edge, Offset(0f, bottomTop + Budik.KeyDepth.toPx()), bottom, corner)
+    drawRect(background, size = Size(size.width, size.height - corner.y))
+    drawRoundRect(background, Offset(0f, bottomTop), bottom, corner)
 }
 
 @Composable

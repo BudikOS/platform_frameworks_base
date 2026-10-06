@@ -143,18 +143,15 @@ constructor(
         }
     }
 
-    private val showVolumeSlider = expandedAudioTileDetailsFeatureInteractor.isEnabled()
-
+    // Budík: the control centre always has the media volume slider.
     val volumeSliderViewModel =
-        if (showVolumeSlider && volumeSliderCoroutineScope != null)
+        volumeSliderCoroutineScope?.let {
             audioStreamSliderViewModelFactory.create(
                 AudioStreamSliderViewModel.FactoryAudioStreamWrapper(
                     SliderType.Stream(AudioStream(AudioManager.STREAM_MUSIC)).stream
                 ),
-                volumeSliderCoroutineScope,
+                it,
             )
-        else {
-            null
         }
 
     override suspend fun onActivated() {
