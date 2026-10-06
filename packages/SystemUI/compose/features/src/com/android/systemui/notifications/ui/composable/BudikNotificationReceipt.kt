@@ -337,13 +337,6 @@ fun ContentScope.BudikNotificationReceipt(
         )
         Spacer(Modifier.height(12.dp))
         Rule(thick = true)
-        Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp)) {
-            val head = Budik.meta(10.sp, c.fg3, FontWeight.Bold, caps = true)
-            Text("ČAS", style = head, modifier = Modifier.width(TimeColumn))
-            Text("OD / CO", style = head, modifier = Modifier.weight(1f))
-            Text("APLIKACE", style = head)
-        }
-        Rule(thick = false)
 
         if (items.isEmpty()) {
             Text(
