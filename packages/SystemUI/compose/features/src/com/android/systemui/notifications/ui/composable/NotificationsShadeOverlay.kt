@@ -70,8 +70,10 @@ import com.android.systemui.statusbar.notification.collection.NotifPipeline
 import com.android.systemui.statusbar.notification.data.repository.ActiveNotificationListRepository
 import com.android.systemui.statusbar.notification.row.OnUserInteractionCallback
 import com.android.systemui.statusbar.notification.stack.ui.view.NotificationScrollView
+import com.android.systemui.dagger.qualifiers.Background
 import dagger.Lazy
 import javax.inject.Inject
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 
 @SysUISingleton
@@ -90,6 +92,7 @@ constructor(
     onUserInteractionCallback: Lazy<OnUserInteractionCallback>,
     activityStarter: Lazy<ActivityStarter>,
     notificationClickNotifier: Lazy<NotificationClickNotifier>,
+    @Background bgDispatcher: CoroutineDispatcher,
 ) : Overlay {
     private val budikActions =
         BudikNotificationActions(
@@ -99,6 +102,7 @@ constructor(
             activityStarter = activityStarter,
             clickNotifier = notificationClickNotifier,
             stackScrollView = stackScrollView,
+            bgDispatcher = bgDispatcher,
         )
 
     override val key = Overlays.NotificationsShade
