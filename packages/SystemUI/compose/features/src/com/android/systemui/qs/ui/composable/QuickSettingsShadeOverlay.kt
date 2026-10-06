@@ -207,6 +207,7 @@ constructor(
                         )
                     )
                 },
+                dimBehind = true,
                 header = {
                     if (contentViewModel.showHeader) {
                         val headerViewModel = quickSettingsContainerViewModel.shadeHeaderViewModel

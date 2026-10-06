@@ -83,7 +83,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.android.systemui.budik.ui.compose.Budik
 import com.android.systemui.budik.ui.compose.BudikIcons
 import com.android.systemui.budik.ui.compose.BudikKey
-import com.android.systemui.budik.ui.compose.BudikSheetHandle
 import com.android.systemui.budik.ui.compose.budikKeycap
 import com.android.systemui.qs.panels.ui.compose.infinitegrid.SmallTileContent
 import com.android.systemui.qs.panels.ui.viewmodel.AvailableEditActions
@@ -441,7 +440,6 @@ fun BudikControlCenterEditor(viewModel: EditModeViewModel, modifier: Modifier = 
             }
             Spacer(Modifier.height(16.dp))
         }
-        BudikSheetHandle(Modifier.align(Alignment.CenterHorizontally))
     }
 }
 

@@ -82,6 +82,7 @@ fun ContentScope.OverlayShade(
     onBackgroundPlaced: (bounds: Rect, topCornerRadius: Float, bottomCornerRadius: Float) -> Unit =
         { _, _, _ ->
         },
+    dimBehind: Boolean = false,
     header: @Composable () -> Unit,
     content: @Composable () -> Unit,
 ) {
@@ -109,6 +110,7 @@ fun ContentScope.OverlayShade(
                 enableTransparency = enableTransparency,
                 spec = panelSpec,
                 isFullScreen = isFullWidth,
+                dimBehind = dimBehind,
                 modifier =
                     Modifier.overscroll(verticalOverscrollEffect)
                         .element(panelElement)
@@ -179,6 +181,7 @@ private fun ContentScope.Panel(
     enableTransparency: Boolean,
     spec: VerticalExpandContainerSpec,
     isFullScreen: Boolean,
+    dimBehind: Boolean,
     modifier: Modifier = Modifier,
     header: (@Composable () -> Unit)?,
     content: @Composable () -> Unit,
@@ -201,23 +204,41 @@ private fun ContentScope.Panel(
         return
     }
 
-    // Budík: an opaque full screen sheet with rounded bottom corners and a hard 0 x 3 dp edge
-    // below it (no gradient, no blur). It is drawn directly, without an offscreen layer or a
-    // shaped clip, so a frame of the slide costs one full screen fill plus the content.
+    // Budík: either an opaque full screen sheet with rounded bottom corners and a hard 0 x 3 dp
+    // edge below it, or ([dimBehind]) the screen dimming with the finger under content that
+    // floats on it. No gradient, no blur, no offscreen layer: a frame costs one full screen fill.
     val background = Colors.panelBackground(enableTransparency)
     val edge = Budik.colors.border
     Box(
         modifier =
-            modifier
-                .disableSwipesWhenScrolling()
-                .drawBehind { drawSheet(background, edge) }
-                .clipToBounds()
+            modifier.disableSwipesWhenScrolling().then(
+                if (dimBehind) {
+                    Modifier.drawBehind { drawRect(background, alpha = DimAlpha * shownFraction()) }
+                } else {
+                    Modifier.drawBehind { drawSheet(background, edge) }.clipToBounds()
+                }
+            )
     ) {
         Column(Modifier.fillMaxSize()) {
             header?.invoke()
             Box(Modifier.weight(1f).fillMaxWidth()) { content() }
         }
     }
+}
+
+/** Opacity of the dimmed screen behind a [dimBehind] panel when it is fully shown. */
+private const val DimAlpha = 0.94f
+
+/**
+ * How much of this content is shown, from 0 (hidden) to 1 (shown); follows the finger while a
+ * transition to or from it runs. Read it in the draw or layer phase only.
+ */
+fun ContentScope.shownFraction(): Float {
+    val transition =
+        layoutState.currentTransitions.lastOrNull { it.isTransitioningFromOrTo(contentKey) }
+            ?: return 1f
+    val progress = transition.progress.coerceIn(0f, 1f)
+    return if (transition.toContent == contentKey) progress else 1f - progress
 }
 
 /** The sheet's background with rounded bottom corners, the hard edge only where it shows. */

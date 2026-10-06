@@ -59,6 +59,9 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.CompositingStrategy
+import androidx.compose.ui.graphics.GraphicsLayerScope
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -89,8 +92,6 @@ import com.android.systemui.brightness.ui.viewmodel.Drag
 import com.android.systemui.budik.ui.compose.Budik
 import com.android.systemui.budik.ui.compose.BudikIcons
 import com.android.systemui.budik.ui.compose.BudikKey
-import com.android.systemui.budik.ui.compose.BudikSheetHandle
-import com.android.systemui.budik.ui.compose.BudikSheetHandleArea
 import com.android.systemui.budik.ui.compose.BudikSoundPowerIcons
 import com.android.systemui.common.shared.model.Icon
 import com.android.systemui.lifecycle.rememberViewModel
@@ -111,6 +112,7 @@ import com.android.systemui.qs.panels.ui.viewmodel.toolbar.ToolbarViewModel
 import com.android.systemui.qs.tileimpl.QSTileImpl
 import com.android.systemui.qs.ui.viewmodel.QuickSettingsContainerViewModel
 import com.android.systemui.res.R
+import com.android.systemui.shade.ui.composable.shownFraction
 import com.android.systemui.util.policy.PolicyRestriction
 import com.android.systemui.volume.panel.component.volume.slider.ui.viewmodel.AudioStreamSliderViewModel
 import kotlinx.coroutines.launch
@@ -169,10 +171,10 @@ internal val ccColors: CcColors
 
 /**
  * Budík "Řídicí centrum", laid out like the iOS / HyperOS control centre from the top of the
- * sheet: a connectivity module and the media module side by side, a row of tiles, the brightness
+ * screen: a connectivity module and the media module side by side, a row of tiles, the brightness
  * and volume sliders next to more tiles, the remaining tiles, then edit / settings / power. Every
- * module sits in a grid of square cells, the content is measured once and only moves while the
- * sheet slides. A tap on empty space closes the sheet.
+ * module sits in a grid of square cells and is measured once; while the panel opens or closes the
+ * modules only fade and settle with the finger, row by row. A tap on empty space closes it.
  */
 @Composable
 fun ContentScope.BudikControlCenter(
@@ -203,15 +205,16 @@ fun ContentScope.BudikControlCenter(
         others.drop(TILES_BEFORE_SLIDERS).forEach { add(CcModule.Key(it)) }
     }
 
+    val shown = { shownFraction() }
     Box(
         modifier.fillMaxSize().clickable(interactionSource = null, indication = null, onClick = onDismiss)
     ) {
         Column(
             Modifier.fillMaxWidth()
                 .verticalScroll(rememberScrollState(), overscrollEffect = null)
-                .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = BudikSheetHandleArea)
+                .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 16.dp)
         ) {
-            ModuleGrid(modules.map { it.span }) {
+            ModuleGrid(modules.map { it.span }, shown) {
                 modules.forEach { module ->
                     when (module) {
                         is CcModule.Connectivity -> ConnectivityModule(module.tiles, details)
@@ -224,9 +227,11 @@ fun ContentScope.BudikControlCenter(
                 }
             }
             Spacer(Modifier.height(16.dp))
-            Footer(toolbarViewModelFactory)
+            Footer(
+                toolbarViewModelFactory,
+                Modifier.graphicsLayer { reveal(shown(), MaxRevealDelay) },
+            )
         }
-        BudikSheetHandle(Modifier.align(Alignment.BottomCenter))
     }
 }
 
@@ -244,9 +249,12 @@ private sealed class CcModule(val span: Span) {
 
 internal class Span(val columns: Int, val rows: Int)
 
-/** Lays [content] out in [CC_COLUMNS] square cells, the n-th child sized and placed by [spans]. */
+/**
+ * Lays [content] out in [CC_COLUMNS] square cells, the n-th child sized and placed by [spans],
+ * each in its own layer revealed by [shown].
+ */
 @Composable
-private fun ModuleGrid(spans: List<Span>, content: @Composable () -> Unit) {
+private fun ModuleGrid(spans: List<Span>, shown: () -> Float, content: @Composable () -> Unit) {
     Layout(content) { measurables, constraints ->
         val gap = CcGap.roundToPx()
         val cell = (constraints.maxWidth - gap * (CC_COLUMNS - 1)) / CC_COLUMNS
@@ -261,10 +269,30 @@ private fun ModuleGrid(spans: List<Span>, content: @Composable () -> Unit) {
         val rows = origins.indices.maxOfOrNull { origins[it].y + spans[it].rows } ?: 0
         layout(constraints.maxWidth, if (rows > 0) extent(rows) else 0) {
             placeables.forEachIndexed { i, placeable ->
-                placeable.place(origins[i].x * (cell + gap), origins[i].y * (cell + gap))
+                val origin = origins[i]
+                placeable.placeWithLayer(origin.x * (cell + gap), origin.y * (cell + gap)) {
+                    reveal(shown(), (origin.y * RowRevealDelay).coerceAtMost(MaxRevealDelay))
+                }
             }
         }
     }
+}
+
+private const val RowRevealDelay = 0.06f
+private const val MaxRevealDelay = 0.3f
+private val RevealOffset = 24.dp
+
+/**
+ * A module fades in and settles from slightly above and smaller as [shown] goes past [delay]. The
+ * alpha is applied to each draw, so no offscreen layer is needed.
+ */
+private fun GraphicsLayerScope.reveal(shown: Float, delay: Float) {
+    val fraction = ((shown - delay) / (1f - MaxRevealDelay)).coerceIn(0f, 1f)
+    alpha = fraction
+    compositingStrategy = CompositingStrategy.ModulateAlpha
+    translationY = -(1f - fraction) * RevealOffset.toPx()
+    scaleX = 0.92f + 0.08f * fraction
+    scaleY = scaleX
 }
 
 /** Puts every module at the first free cell in reading order where it fits (dense packing). */
@@ -707,7 +735,7 @@ private fun VerticalSlider(
 private const val IconFillThreshold = 0.18f
 
 @Composable
-private fun Footer(toolbarViewModelFactory: ToolbarViewModel.Factory) {
+private fun Footer(toolbarViewModelFactory: ToolbarViewModel.Factory, modifier: Modifier) {
     val cc = ccColors
     val toolbarViewModel =
         rememberViewModel("BudikControlCenter.Toolbar") { toolbarViewModelFactory.create() }
@@ -715,7 +743,7 @@ private fun Footer(toolbarViewModelFactory: ToolbarViewModel.Factory) {
         rememberViewModel("BudikControlCenter.Edit") {
             toolbarViewModel.editModeButtonViewModelFactory.create()
         }
-    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+    Row(modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         if (editViewModel.isEditButtonVisible) {
             BudikKey(
                 face = cc.module,
