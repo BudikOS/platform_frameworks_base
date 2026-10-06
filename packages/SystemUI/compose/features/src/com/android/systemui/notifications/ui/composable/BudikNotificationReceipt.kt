@@ -21,9 +21,13 @@ import android.app.PendingIntent
 import android.service.notification.NotificationListenerService
 import android.text.format.DateFormat
 import android.util.Log
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -44,8 +48,10 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -54,6 +60,10 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.util.VelocityTracker
+import androidx.compose.ui.input.pointer.util.addPointerInputChange
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.Role
@@ -82,7 +92,10 @@ import dagger.Lazy
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import kotlin.math.abs
+import kotlin.math.sign
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 private const val TAG = "BudikNotifications"
 
@@ -141,6 +154,12 @@ class BudikNotificationActions(
     fun markRead(item: BudikNotificationItem) {
         val entry = notifPipeline.get().getEntry(item.key) ?: return
         entry.sbn.notification.markAsReadAction()?.actionIntent?.let { send(it) }
+        dismiss(item)
+    }
+
+    /** User dismissal (swipe), like swiping a row of the notification stack. */
+    fun dismiss(item: BudikNotificationItem) {
+        val entry = notifPipeline.get().getEntry(item.key) ?: return
         if (entry.isClearable) {
             onUserInteractionCallback
                 .get()
@@ -285,7 +304,12 @@ fun ContentScope.BudikNotificationReceipt(
     val locale = LocalConfiguration.current.locales[0]
     val store by actions.activeNotifications.collectAsStateWithLifecycle()
     var seenVersion by remember { mutableIntStateOf(0) }
-    val items = remember(store, seenVersion) { actions.items(store, SeenNotifications.keys) }
+    // Rows swiped away disappear at once, before the notification is really gone from the list.
+    val swiped = remember { mutableStateListOf<String>() }
+    val items =
+        remember(store, seenVersion, swiped.size) {
+            actions.items(store, SeenNotifications.keys).filterNot { it.key in swiped }
+        }
     val currentItems by rememberUpdatedState(items)
 
     // Everything shown while the shade was open is no longer new once it closes.
@@ -336,17 +360,26 @@ fun ContentScope.BudikNotificationReceipt(
             ) {
                 items(items, key = { it.key }) { item ->
                     val index = items.indexOf(item)
-                    ReceiptRow(
-                        item = item,
-                        locale = locale,
-                        showDivider = index > 0 && !item.isNew && !items[index - 1].isNew,
-                        onOpen = { actions.open(item, index, items.size) },
-                        onMarkRead = {
-                            SeenNotifications.keys += item.key
-                            seenVersion++
-                            actions.markRead(item)
+                    SwipeToDismiss(
+                        canDismiss = item.canDismiss,
+                        onDismissed = {
+                            swiped += item.key
+                            actions.dismiss(item)
                         },
-                    )
+                        modifier = Modifier.animateItem(),
+                    ) {
+                        ReceiptRow(
+                            item = item,
+                            locale = locale,
+                            showDivider = index > 0 && !item.isNew && !items[index - 1].isNew,
+                            onOpen = { actions.open(item, index, items.size) },
+                            onMarkRead = {
+                                SeenNotifications.keys += item.key
+                                seenVersion++
+                                actions.markRead(item)
+                            },
+                        )
+                    }
                 }
             }
         }
@@ -393,6 +426,57 @@ fun ContentScope.BudikNotificationReceipt(
 }
 
 private val TimeColumn = 48.dp
+
+/**
+ * A row that can be swiped away sideways, like a row of the notification stack: past 40 % of
+ * the width (or flung) it slides out and is dismissed, otherwise it springs back. Rows that
+ * cannot be dismissed (ongoing) only follow the finger a little and spring back. Only the
+ * row's layer moves, nothing is re-measured while dragging.
+ */
+@Composable
+private fun SwipeToDismiss(
+    canDismiss: Boolean,
+    onDismissed: () -> Unit,
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit,
+) {
+    val offset = remember { Animatable(0f) }
+    val scope = rememberCoroutineScope()
+    val currentOnDismissed by rememberUpdatedState(onDismissed)
+    Box(
+        modifier
+            .fillMaxWidth()
+            .pointerInput(canDismiss) {
+                val velocity = VelocityTracker()
+                detectHorizontalDragGestures(
+                    onDragStart = { velocity.resetTracking() },
+                    onDragCancel = { scope.launch { offset.animateTo(0f, spring()) } },
+                    onDragEnd = {
+                        val width = size.width.toFloat()
+                        val x = offset.value
+                        val vx = velocity.calculateVelocity().x
+                        val flung = abs(vx) > 1500f && sign(vx) == sign(x) && abs(x) > width * 0.1f
+                        scope.launch {
+                            if (canDismiss && (abs(x) > width * 0.4f || flung)) {
+                                offset.animateTo(sign(x) * width, tween(150))
+                                currentOnDismissed()
+                            } else {
+                                offset.animateTo(0f, spring())
+                            }
+                        }
+                    },
+                ) { change, dx ->
+                    velocity.addPointerInputChange(change)
+                    change.consume()
+                    val target = offset.value + if (canDismiss) dx else dx * 0.25f
+                    scope.launch { offset.snapTo(target) }
+                }
+            }
+            .graphicsLayer { translationX = offset.value }
+    ) {
+        content()
+    }
+}
 
 private fun newWord(count: Int) =
     when (count) {
