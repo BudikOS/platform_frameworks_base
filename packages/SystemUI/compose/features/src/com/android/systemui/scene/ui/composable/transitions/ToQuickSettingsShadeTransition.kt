@@ -19,7 +19,6 @@ package com.android.systemui.scene.ui.composable.transitions
 import androidx.compose.animation.core.tween
 import com.android.compose.animation.scene.TransitionBuilder
 import com.android.compose.animation.scene.reveal.ContainerRevealHaptics
-import com.android.compose.animation.scene.reveal.verticalContainerReveal
 import com.android.mechanics.behavior.VerticalExpandContainerSpec
 import com.android.systemui.qs.ui.composable.QuickSettingsShade
 import com.android.systemui.shade.ui.composable.OverlayShade
@@ -32,12 +31,8 @@ fun TransitionBuilder.toQuickSettingsShadeTransition(
 ) {
     spec = tween(durationMillis = (DefaultDuration * durationScale).inWholeMilliseconds.toInt())
 
-    verticalContainerReveal(
-        container = QuickSettingsShade.Elements.Panel,
-        motionSpec = shadeExpansionMotion,
-        haptics = revealHaptics,
-        useMechanics = true,
-    )
+    // Budík: full screen sheet sliding with the finger instead of the container reveal.
+    budikSheetSlide(QuickSettingsShade.Elements.Panel)
 
     fractionRange(end = .5f) { fade(OverlayShade.Elements.Scrim) }
     fractionRange(start = .5f) {

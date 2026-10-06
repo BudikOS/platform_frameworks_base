@@ -25,6 +25,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.ReadOnlyComposable
@@ -276,6 +277,20 @@ fun BudikKey(
                 )
                 .budikKeycap(face, shadow, radius, border, pressed),
         content = content,
+    )
+}
+
+/** Space kept free at the bottom of a full screen shade sheet for [BudikSheetHandle]. */
+val BudikSheetHandleArea = 24.dp
+
+/** The grab handle at the bottom edge of a full screen shade sheet: drag up to close. */
+@Composable
+fun BudikSheetHandle(modifier: Modifier = Modifier, color: Color = Budik.colors.fg3) {
+    Box(
+        modifier
+            .padding(bottom = 10.dp)
+            .size(width = 40.dp, height = 5.dp)
+            .drawBehind { drawRoundRect(color, cornerRadius = CornerRadius(size.height / 2f)) }
     )
 }
 

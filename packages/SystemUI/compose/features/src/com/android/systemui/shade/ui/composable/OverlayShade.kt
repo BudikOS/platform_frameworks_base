@@ -17,23 +17,31 @@
 package com.android.systemui.shade.ui.composable
 
 import android.annotation.SuppressLint
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.overscroll
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.CompositingStrategy
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.approachLayout
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onPlaced
@@ -81,6 +89,7 @@ fun ContentScope.OverlayShade(
     val isFullWidth = LocalSceneContainerPreloadedResources.current.isFullWidthShade
     val panelSpec = rememberShadeExpansionMotion(isFullWidth)
     val panelCornerRadiusPx = with(LocalDensity.current) { panelSpec.radius.toPx() }
+    val panelWidth = Dimensions.PanelWidth
     val panelAlignment =
         when {
             isFullWidth -> Alignment.TopCenter
@@ -100,6 +109,7 @@ fun ContentScope.OverlayShade(
             Panel(
                 enableTransparency = enableTransparency,
                 spec = panelSpec,
+                isFullScreen = isFullWidth,
                 modifier =
                     Modifier.overscroll(verticalOverscrollEffect)
                         .element(panelElement)
@@ -109,7 +119,9 @@ fun ContentScope.OverlayShade(
                                 label = "OverlayShade",
                             )
                         }
-                        .width(Dimensions.PanelWidth)
+                        // Budík: on phones the sheet covers the whole screen (iOS like).
+                        .thenIf(isFullWidth) { Modifier.fillMaxSize() }
+                        .thenIf(!isFullWidth) { Modifier.width(panelWidth) }
                         // TODO(440566878): Investigate if this can be optimized by replacing with
                         // onLayoutRectChanged.
                         .onPlaced { coordinates ->
@@ -167,19 +179,58 @@ fun ContentScope.OverlayShade(
 private fun ContentScope.Panel(
     enableTransparency: Boolean,
     spec: VerticalExpandContainerSpec,
+    isFullScreen: Boolean,
     modifier: Modifier = Modifier,
     header: (@Composable () -> Unit)?,
     content: @Composable () -> Unit,
 ) {
+    if (!isFullScreen) {
+        Box(
+            modifier =
+                modifier
+                    .disableSwipesWhenScrolling()
+                    .verticalExpandContainerBackground(
+                        Colors.panelBackground(enableTransparency),
+                        spec,
+                    )
+        ) {
+            Column {
+                header?.invoke()
+                content()
+            }
+        }
+        return
+    }
+
+    // Budík: an opaque full screen sheet with rounded bottom corners and a hard 0 x 3 dp edge
+    // below it (no gradient, no blur). While it slides, the sheet is one offscreen layer, so a
+    // frame only moves an already rendered texture instead of drawing the whole panel again.
+    val edge = Budik.colors.border
+    val shape = remember { RoundedCornerShape(bottomStart = Budik.RadiusL, bottomEnd = Budik.RadiusL) }
     Box(
         modifier =
             modifier
                 .disableSwipesWhenScrolling()
-                .verticalExpandContainerBackground(Colors.panelBackground(enableTransparency), spec)
+                .drawBehind {
+                    drawRoundRect(
+                        edge,
+                        topLeft = Offset(0f, Budik.KeyDepth.toPx()),
+                        size = size,
+                        cornerRadius = CornerRadius(Budik.RadiusL.toPx()),
+                    )
+                }
+                .graphicsLayer {
+                    this.shape = shape
+                    clip = true
+                    compositingStrategy =
+                        if (layoutState.isTransitioning()) CompositingStrategy.Offscreen
+                        else CompositingStrategy.Auto
+                }
+                .background(Colors.panelBackground(enableTransparency))
     ) {
-        Column {
+        Column(Modifier.fillMaxSize()) {
             header?.invoke()
-            content()
+            Box(Modifier.weight(1f).fillMaxWidth()) { content() }
         }
     }
 }

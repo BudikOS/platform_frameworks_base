@@ -19,7 +19,6 @@ package com.android.systemui.scene.ui.composable.transitions
 import androidx.compose.animation.core.tween
 import com.android.compose.animation.scene.TransitionBuilder
 import com.android.compose.animation.scene.reveal.ContainerRevealHaptics
-import com.android.compose.animation.scene.reveal.verticalContainerReveal
 import com.android.mechanics.behavior.VerticalExpandContainerSpec
 import com.android.systemui.notifications.ui.composable.Notifications
 import com.android.systemui.notifications.ui.composable.NotificationsShade
@@ -54,7 +53,8 @@ fun TransitionBuilder.toNotificationsShadeTransition(
         enabled = enableSharedElements,
     )
 
-    verticalContainerReveal(NotificationsShade.Elements.Panel, shadeExpansionMotion, revealHaptics)
+    // Budík: full screen sheet sliding with the finger instead of the container reveal.
+    budikSheetSlide(NotificationsShade.Elements.Panel)
 
     fractionRange(start = .16f, end = 0.8f) { fade(NotificationsShade.Elements.StatusBar) }
     fractionRange(start = .33f, end = 0.8f) { fade(Notifications.Elements.StackPlaceholder) }

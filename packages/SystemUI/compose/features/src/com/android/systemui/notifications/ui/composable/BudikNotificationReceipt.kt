@@ -32,7 +32,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
@@ -284,7 +283,6 @@ fun ContentScope.BudikNotificationReceipt(
 ) {
     val c = Budik.colors
     val locale = LocalConfiguration.current.locales[0]
-    val screenHeight = LocalConfiguration.current.screenHeightDp
     val store by actions.activeNotifications.collectAsStateWithLifecycle()
     var seenVersion by remember { mutableIntStateOf(0) }
     val items = remember(store, seenVersion) { actions.items(store, SeenNotifications.keys) }
@@ -306,24 +304,13 @@ fun ContentScope.BudikNotificationReceipt(
             .border(1.dp, c.line, shape)
             .padding(top = 16.dp, bottom = 14.dp)
     ) {
-        Row(
-            verticalAlignment = Alignment.Bottom,
+        // The date is shown once, next to the large clock above the card.
+        Text(
+            text = "Oznámení.",
+            style = Budik.headline(30.sp, c.fg, FontWeight.ExtraBold),
+            maxLines = 1,
             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-        ) {
-            Text(
-                text = "Oznámení.",
-                style = Budik.headline(30.sp, c.fg, FontWeight.ExtraBold),
-                maxLines = 1,
-                modifier = Modifier.weight(1f),
-            )
-            val today = remember(locale) { dateFormat(locale, "EEEdMyyyy").format(Date()).capitalized(locale) }
-            Text(
-                text = today,
-                style = Budik.meta(12.sp, c.fg3),
-                maxLines = 1,
-                modifier = Modifier.padding(bottom = 5.dp),
-            )
-        }
+        )
         Spacer(Modifier.height(12.dp))
         Rule(thick = true)
         Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp)) {
@@ -344,7 +331,7 @@ fun ContentScope.BudikNotificationReceipt(
             LazyColumn(
                 modifier =
                     Modifier.fillMaxWidth()
-                        .heightIn(max = (screenHeight - 330).coerceAtLeast(160).dp)
+                        .weight(1f, fill = false)
                         .disableSwipesWhenScrolling()
             ) {
                 items(items, key = { it.key }) { item ->

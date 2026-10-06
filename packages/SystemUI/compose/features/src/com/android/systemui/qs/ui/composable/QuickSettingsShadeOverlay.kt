@@ -27,6 +27,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -42,16 +43,13 @@ import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.blur
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.geometry.Offset
@@ -91,6 +89,7 @@ import com.android.systemui.development.ui.viewmodel.BuildNumberViewModel
 import com.android.systemui.lifecycle.rememberViewModel
 import com.android.systemui.media.remedia.ui.compose.Media
 import com.android.systemui.media.remedia.ui.compose.MediaPresentationStyle
+import com.android.systemui.notifications.ui.composable.BudikShadeClock
 import com.android.systemui.notifications.ui.composable.SnoozableHeadsUpNotificationPlaceholder
 import com.android.systemui.qs.composefragment.ui.GridAnchor
 import com.android.systemui.qs.flags.QsDetailedView
@@ -117,7 +116,6 @@ import com.android.systemui.statusbar.notification.stack.shared.model.ShadeScrim
 import com.android.systemui.statusbar.notification.stack.shared.model.ShadeScrimShape
 import com.android.systemui.statusbar.notification.stack.ui.view.NotificationScrollView
 import com.android.systemui.statusbar.notification.stack.ui.viewmodel.NotificationsPlaceholderViewModel
-import com.android.systemui.statusbar.policy.BatteryController
 import com.android.systemui.volume.panel.component.volume.slider.ui.viewmodel.AudioStreamSliderViewModel
 import com.android.systemui.volume.panel.component.volume.ui.composable.VolumeSlider
 import com.android.systemui.volume.panel.component.volume.ui.composable.VolumeSliderDimensions
@@ -135,7 +133,6 @@ constructor(
     private val quickSettingsContainerViewModelFactory: QuickSettingsContainerViewModel.Factory,
     private val notificationStackScrollView: Lazy<NotificationScrollView>,
     private val notificationsPlaceholderViewModelFactory: NotificationsPlaceholderViewModel.Factory,
-    private val batteryController: BatteryController,
 ) : Overlay {
 
     override val key = Overlays.QuickSettingsShade
@@ -177,14 +174,8 @@ constructor(
         val contentAlphaFromBrightnessMirror by
             animateFloatAsState(if (showBrightnessMirror) 0f else 1f)
 
-        val targetBlurRadiusPx: Float by
-            remember(layoutState) {
-                derivedStateOf {
-                    contentViewModel.calculateTargetBlurRadius(layoutState.transitionState)
-                }
-            }
-        val animatedBlurRadiusPx: Float by
-            animateFloatAsState(targetValue = targetBlurRadiusPx, label = "NSOverlay-blurRadius")
+        // Budík: no blur behind the bouncer (an opaque sheet; blur is too costly on the GPU).
+        val isFullWidth = LocalSceneContainerPreloadedResources.current.isFullWidthShade
 
         // Set the bounds to null when the QuickSettings overlay disappears.
         DisposableEffectWithLifecycle(Unit) {
@@ -196,27 +187,10 @@ constructor(
 
         LaunchedEffectWithLifecycle(key1 = Unit) { contentViewModel.detectShadeModeChanges() }
 
-        val batteryLevel by
-            produceState<Int?>(null, batteryController) {
-                val callback =
-                    object : BatteryController.BatteryStateChangeCallback {
-                        override fun onBatteryLevelChanged(
-                            level: Int,
-                            pluggedIn: Boolean,
-                            charging: Boolean,
-                        ) {
-                            value = level
-                        }
-                    }
-                batteryController.addCallback(callback)
-                awaitDispose { batteryController.removeCallback(callback) }
-            }
-
         Box(
             modifier =
                 modifier
                     .graphicsLayer { alpha = contentAlphaFromBrightnessMirror }
-                    .blur(with(LocalDensity.current) { animatedBlurRadiusPx.toDp() })
                     .thenIf(showBrightnessMirror) { Modifier.gesturesDisabled() }
         ) {
             OverlayShade(
@@ -242,7 +216,10 @@ constructor(
                             viewModel = headerViewModel,
                             notificationsHighlight = headerViewModel.inactiveChipHighlight,
                             quickSettingsHighlight = ChipHighlightModel.Strong,
-                            showClock = true,
+                            // Budík: the sheet shows the large clock and date itself; the header
+                            // keeps only the system icons and battery (one place, like iOS).
+                            showClock = !isFullWidth,
+                            showDate = !isFullWidth,
                             modifier = Modifier.element(QuickSettingsShade.Elements.StatusBar),
                         )
                     }
@@ -251,7 +228,6 @@ constructor(
                 QuickSettingsContainer(
                     contentViewModel = contentViewModel,
                     containerViewModel = quickSettingsContainerViewModel,
-                    batteryLevel = batteryLevel,
                 )
             }
             SnoozableHeadsUpNotificationPlaceholder(
@@ -284,7 +260,6 @@ private fun useBrightnessMirrorInOverlay(): Boolean {
 private fun ContentScope.QuickSettingsContainer(
     contentViewModel: QuickSettingsShadeOverlayContentViewModel,
     containerViewModel: QuickSettingsContainerViewModel,
-    batteryLevel: Int?,
     modifier: Modifier = Modifier,
 ) {
     val isEditing by containerViewModel.editModeViewModel.isEditing.collectAsStateWithLifecycle()
@@ -312,7 +287,8 @@ private fun ContentScope.QuickSettingsContainer(
 
     AnimatedContent(
         modifier =
-            Modifier.focusRequester(focusRequester)
+            Modifier.fillMaxSize()
+                .focusRequester(focusRequester)
                 .focusable()
                 .onLayoutRectChanged { currentHeight = it.height }
                 .semantics { paneTitle = accessibilityTitle }
@@ -348,19 +324,26 @@ private fun ContentScope.QuickSettingsContainer(
             }
 
             ShadeBodyState.Default -> {
-                // Budík: own control centre instead of QuickSettingsLayout.
-                Column(modifier = modifier.sysuiResTag("quick_settings_panel")) {
+                // Budík: own control centre instead of QuickSettingsLayout: the large clock on
+                // top and the dark sheet anchored to the bottom edge (05_quick_settings).
+                Column(modifier = modifier.fillMaxSize().sysuiResTag("quick_settings_panel")) {
                     QuickSettingsOverlayPrivacyChip(
                         containerViewModel.shadeHeaderViewModel,
                         modifier = Modifier.padding(horizontal = 16.dp),
                     )
-                    Spacer(Modifier.height(8.dp))
-                    BudikControlCenter(
-                        containerViewModel = containerViewModel,
-                        toolbarViewModelFactory = contentViewModel.toolbarViewModelFactory,
-                        batteryLevel = batteryLevel,
-                        onDone = contentViewModel::onScrimClicked,
+                    BudikShadeClock(
+                        Modifier.padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 12.dp)
                     )
+                    Box(
+                        modifier = Modifier.weight(1f).fillMaxWidth(),
+                        contentAlignment = Alignment.BottomCenter,
+                    ) {
+                        BudikControlCenter(
+                            containerViewModel = containerViewModel,
+                            toolbarViewModelFactory = contentViewModel.toolbarViewModelFactory,
+                            onDone = contentViewModel::onScrimClicked,
+                        )
+                    }
                 }
             }
         }

@@ -75,6 +75,7 @@ import com.android.systemui.brightness.ui.viewmodel.Drag
 import com.android.systemui.budik.ui.compose.Budik
 import com.android.systemui.budik.ui.compose.BudikIcons
 import com.android.systemui.budik.ui.compose.BudikKey
+import com.android.systemui.budik.ui.compose.BudikSheetHandle
 import com.android.systemui.common.shared.model.Icon
 import com.android.systemui.lifecycle.rememberViewModel
 import com.android.systemui.media.remedia.ui.compose.Media
@@ -112,7 +113,6 @@ private const val BRIGHTNESS_SEGMENTS = 20
 fun ContentScope.BudikControlCenter(
     containerViewModel: QuickSettingsContainerViewModel,
     toolbarViewModelFactory: ToolbarViewModel.Factory,
-    batteryLevel: Int?,
     onDone: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -130,12 +130,14 @@ fun ContentScope.BudikControlCenter(
                 .fillMaxWidth()
                 .background(c.ccPanel, sheetShape)
                 .then(if (c.isDark) Modifier.border(1.dp, c.ccBorder, sheetShape) else Modifier)
-                .padding(start = 16.dp, end = 16.dp, top = 14.dp, bottom = 16.dp)
+                .padding(start = 16.dp, end = 16.dp, top = 14.dp)
     ) {
-        Header(tiles, batteryLevel)
+        Header()
         Spacer(Modifier.height(14.dp))
 
-        Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
+        Column(
+            Modifier.fillMaxWidth().weight(1f, fill = false).verticalScroll(rememberScrollState())
+        ) {
             if (containerViewModel.showMedia) {
                 Media(
                     viewModelFactory = containerViewModel.mediaViewModelFactory,
@@ -180,15 +182,17 @@ fun ContentScope.BudikControlCenter(
 
             Spacer(Modifier.height(16.dp))
             Footer(toolbarViewModel)
+            Spacer(Modifier.height(12.dp))
         }
+        BudikSheetHandle(Modifier.align(Alignment.CenterHorizontally), color = c.ccText)
     }
 }
 
+/** Title and grab bar; network and battery are shown once, in the status icons above. */
 @Composable
-private fun Header(tiles: List<TileViewModel>, batteryLevel: Int?) {
+private fun Header() {
     val c = Budik.colors
     val style = Budik.meta(11.sp, c.ccText, caps = true)
-    val network = rememberNetworkLabel(tiles)
     Box(Modifier.fillMaxWidth().height(20.dp)) {
         Text(
             text = "ŘÍDICÍ CENTRUM",
@@ -200,15 +204,6 @@ private fun Header(tiles: List<TileViewModel>, batteryLevel: Int?) {
             Modifier.align(Alignment.Center)
                 .size(32.dp, 4.dp)
                 .background(c.ccHandle, RoundedCornerShape(2.dp))
-        )
-        val status = listOfNotNull(network, batteryLevel?.let { "$it %" }).joinToString(" · ")
-        Text(
-            text = status,
-            style = style,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            textAlign = TextAlign.End,
-            modifier = Modifier.align(Alignment.CenterEnd).fillMaxWidth(0.42f),
         )
     }
 }

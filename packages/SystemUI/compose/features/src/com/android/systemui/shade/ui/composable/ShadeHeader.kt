@@ -376,6 +376,7 @@ fun ContentScope.OverlayShadeHeader(
     quickSettingsHighlight: ChipHighlightModel,
     showClock: Boolean,
     modifier: Modifier = Modifier,
+    showDate: Boolean = true,
 ) {
     val horizontalPadding =
         maxOf(
@@ -390,7 +391,9 @@ fun ContentScope.OverlayShadeHeader(
         modifier = modifier,
         startContent = {
             Box(modifier = Modifier.layoutId(ShadeHeader.LayoutId.StartContent)) {
-                ShadeHighlightChip(
+                // Budík: the sheet shows its own large clock and date, so the chip goes away
+                // instead of repeating them.
+                if (showClock || showDate) ShadeHighlightChip(
                     backgroundColor = notificationsHighlight.backgroundColor,
                     hoverBackgroundColor = notificationsHighlight.hoverBackgroundColor,
                     horizontalArrangement = Arrangement.spacedBy(5.dp),
@@ -411,11 +414,13 @@ fun ContentScope.OverlayShadeHeader(
                     if (showClock) {
                         Clock(textColor = notificationsHighlight.foregroundColor)
                     }
-                    VariableDayDate(
-                        longerDateText = viewModel.longerDateText,
-                        shorterDateText = viewModel.shorterDateText,
-                        textColor = notificationsHighlight.foregroundColor,
-                    )
+                    if (showDate) {
+                        VariableDayDate(
+                            longerDateText = viewModel.longerDateText,
+                            shorterDateText = viewModel.shorterDateText,
+                            textColor = notificationsHighlight.foregroundColor,
+                        )
+                    }
                 }
             }
         },
