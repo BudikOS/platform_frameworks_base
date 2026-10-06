@@ -319,7 +319,7 @@ fun ContentScope.BudikNotificationReceipt(
             val today = remember(locale) { dateFormat(locale, "EEEdMyyyy").format(Date()).capitalized(locale) }
             Text(
                 text = today,
-                style = Budik.mono(12.sp, c.fg3),
+                style = Budik.meta(12.sp, c.fg3),
                 maxLines = 1,
                 modifier = Modifier.padding(bottom = 5.dp),
             )
@@ -327,7 +327,7 @@ fun ContentScope.BudikNotificationReceipt(
         Spacer(Modifier.height(12.dp))
         Rule(thick = true)
         Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp)) {
-            val head = Budik.mono(10.sp, c.fg3, FontWeight.Bold)
+            val head = Budik.meta(10.sp, c.fg3, FontWeight.Bold, caps = true)
             Text("ČAS", style = head, modifier = Modifier.width(TimeColumn))
             Text("OD / CO", style = head, modifier = Modifier.weight(1f))
             Text("APLIKACE", style = head)
@@ -462,7 +462,7 @@ private fun ReceiptRow(
     ) {
         Text(
             text = time,
-            style = Budik.mono(14.sp, c.fg, FontWeight.Bold),
+            style = Budik.meta(14.sp, c.fg, FontWeight.Bold),
             maxLines = 1,
             modifier = Modifier.width(TimeColumn),
         )
@@ -478,7 +478,7 @@ private fun ReceiptRow(
                 Spacer(Modifier.width(8.dp))
                 Text(
                     text = item.app,
-                    style = Budik.mono(11.sp, c.fg3),
+                    style = Budik.meta(11.sp, c.fg3),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.padding(top = 2.dp).widthIn(max = 110.dp),

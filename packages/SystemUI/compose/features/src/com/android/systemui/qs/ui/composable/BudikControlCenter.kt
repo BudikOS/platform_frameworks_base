@@ -187,7 +187,7 @@ fun ContentScope.BudikControlCenter(
 @Composable
 private fun Header(tiles: List<TileViewModel>, batteryLevel: Int?) {
     val c = Budik.colors
-    val style = Budik.mono(11.sp, c.ccText)
+    val style = Budik.meta(11.sp, c.ccText, caps = true)
     val network = rememberNetworkLabel(tiles)
     Box(Modifier.fillMaxWidth().height(20.dp)) {
         Text(
@@ -308,7 +308,7 @@ private fun SmallKey(tile: TileViewModel, details: DetailsViewModel, modifier: M
         Spacer(Modifier.height(6.dp))
         Text(
             text = ui.label,
-            style = Budik.mono(10.sp, Budik.colors.ccText),
+            style = Budik.meta(10.sp, Budik.colors.ccText),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
@@ -448,7 +448,7 @@ private fun SegmentedBrightness(viewModel: BrightnessSliderViewModel) {
         Spacer(Modifier.width(12.dp))
         Text(
             text = "${(fraction * 100).roundToInt()}",
-            style = Budik.mono(14.sp, c.ccOnKeyOff),
+            style = Budik.meta(14.sp, c.ccOnKeyOff),
             textAlign = TextAlign.End,
             modifier = Modifier.width(30.dp),
         )
@@ -482,7 +482,7 @@ private fun Footer(toolbarViewModel: ToolbarViewModel) {
         Spacer(Modifier.width(10.dp))
         Text(
             text = remember { versionLabel() },
-            style = Budik.mono(11.sp, c.ccText),
+            style = Budik.meta(11.sp, c.ccText),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.weight(1f),

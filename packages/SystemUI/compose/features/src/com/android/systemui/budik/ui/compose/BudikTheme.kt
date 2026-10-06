@@ -59,7 +59,8 @@ import androidx.compose.ui.unit.sp
  * Budík OS design tokens for the SystemUI Compose surfaces (export/README.md, tokens.json):
  * radii 6/12/20 dp, hard 0x3 dp shadow without blur, mint #21D4BE never as text on light
  * backgrounds, text on mint is always #0E0F11, navy primary buttons, keycap buttons without key
- * captions, JetBrains Mono for metadata, Schibsted Grotesk headlines, Instrument Sans body text.
+ * captions, Instrument Sans with tabular figures for metadata, Schibsted Grotesk headlines,
+ * Instrument Sans body text.
  */
 object Budik {
     val Ink = Color(0xFF0E0F11)
@@ -164,11 +165,6 @@ object Budik {
 
     // Families come from vendor/budikos fonts_customization.xml. Device fonts are optional: if a
     // family is missing (e.g. a GSI without our fonts) Compose falls back to the platform default.
-    val Mono =
-        FontFamily(
-            Font(DeviceFontFamilyName("jetbrains-mono"), FontWeight.Normal),
-            Font(DeviceFontFamilyName("jetbrains-mono"), FontWeight.Bold),
-        )
     val Headline =
         FontFamily(
             Font(DeviceFontFamilyName("schibsted-grotesk"), FontWeight.Normal),
@@ -184,13 +180,23 @@ object Budik {
             Font(DeviceFontFamilyName("instrument-sans"), FontWeight.Bold),
         )
 
-    fun mono(size: TextUnit, color: Color, weight: FontWeight = FontWeight.Normal) =
+    /**
+     * Metadata (times, column heads, versions, captions): Instrument Sans with tabular figures, no
+     * monospace in the UI. [caps] labels are written in capitals and get wider tracking.
+     */
+    fun meta(
+        size: TextUnit,
+        color: Color,
+        weight: FontWeight = FontWeight.Normal,
+        caps: Boolean = false,
+    ) =
         TextStyle(
-            fontFamily = Mono,
+            fontFamily = Body,
             fontSize = size,
             fontWeight = weight,
             color = color,
-            letterSpacing = 0.04.em(size),
+            fontFeatureSettings = "tnum",
+            letterSpacing = (if (caps) 0.08 else 0.01).em(size),
         )
 
     fun headline(size: TextUnit, color: Color, weight: FontWeight = FontWeight.Bold) =
