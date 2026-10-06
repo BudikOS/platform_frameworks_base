@@ -56,7 +56,8 @@ fun TransitionBuilder.toNotificationsShadeTransition(
     budikPanelTransition()
 
     fractionRange(start = .16f, end = 0.8f) { fade(NotificationsShade.Elements.StatusBar) }
-    fractionRange(start = .33f, end = 0.8f) { fade(Notifications.Elements.StackPlaceholder) }
+    // Budík: the stack placeholder does not fade: the stack is not shown in the shade (the
+    // receipt is), and its alpha made the whole stack view draw into a full screen layer.
 }
 
 private val DefaultDuration = 300.milliseconds

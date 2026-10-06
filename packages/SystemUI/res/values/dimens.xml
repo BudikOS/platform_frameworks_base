@@ -1285,8 +1285,10 @@
     <dimen name="min_window_blur_radius">1px</dimen>
     <dimen name="max_window_blur_radius">23px</dimen>
 
-    <!-- Blur radius of the Notification Shade content (notifications, footer, shelf) -->
-    <dimen name="max_shade_content_blur_radius">@dimen/max_window_blur_radius</dimen>
+    <!-- Blur radius of the Notification Shade content (notifications, footer, shelf). Budík: none,
+         the control centre covers the stack and the blur cost a full screen offscreen pass per
+         frame while it opened. -->
+    <dimen name="max_shade_content_blur_radius">0px</dimen>
 
     <!-- Blur radius behind Notification Shade -->
     <dimen name="max_shade_window_blur_radius">34dp</dimen>

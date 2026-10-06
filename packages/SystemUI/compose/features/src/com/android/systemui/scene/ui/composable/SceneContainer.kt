@@ -20,7 +20,6 @@ package com.android.systemui.scene.ui.composable
 
 import android.os.Build
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
-import androidx.compose.foundation.LocalOverscrollFactory
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.Box
@@ -276,16 +275,9 @@ private fun InternalSceneContainer(
         }
     }
 
-    // Overlays use the offset overscroll effect when shown on large screens, otherwise they
-    // stretch. All scenes use the OffsetOverscrollEffect.
+    // Budík: scenes and overlays all use the OffsetOverscrollEffect. The stretch of full screen
+    // overlays drew the whole panel into an offscreen layer every frame of an overscroll.
     val offsetOverscrollEffectFactory = rememberOffsetOverscrollEffectFactory()
-    val stretchOverscrollEffectFactory = checkNotNull(LocalOverscrollFactory.current)
-    val overlayEffectFactory =
-        if (isFullWidthShade) {
-            stretchOverscrollEffectFactory
-        } else {
-            offsetOverscrollEffectFactory
-        }
 
     Box(
         modifier =
@@ -333,7 +325,7 @@ private fun InternalSceneContainer(
                 overlay(
                     key = overlayKey,
                     userActions = userActionsByContentKey.getOrDefault(overlayKey, emptyMap()),
-                    effectFactory = overlayEffectFactory,
+                    effectFactory = offsetOverscrollEffectFactory,
                     alwaysCompose = overlay.alwaysCompose,
                     // The bouncer overlay is special and not rendered here, so avoid adding
                     // the fullscreen clickable which modals typically introduce. This avoids
