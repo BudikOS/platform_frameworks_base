@@ -47,7 +47,6 @@ import com.android.internal.jank.InteractionJankMonitor
 import com.android.systemui.budik.ui.compose.BudikSheetHandle
 import com.android.systemui.budik.ui.compose.BudikSheetHandleArea
 import com.android.systemui.dagger.SysUISingleton
-import com.android.systemui.dagger.qualifiers.Background
 import com.android.systemui.keyguard.ui.composable.elements.LockscreenElements
 import com.android.systemui.lifecycle.rememberViewModel
 import com.android.systemui.media.remedia.ui.compose.Media
@@ -65,15 +64,9 @@ import com.android.systemui.scene.ui.composable.Overlay
 import com.android.systemui.shade.ui.composable.ChipHighlightModel
 import com.android.systemui.shade.ui.composable.OverlayShade
 import com.android.systemui.shade.ui.composable.OverlayShadeHeader
-import com.android.systemui.plugins.ActivityStarter
-import com.android.systemui.statusbar.NotificationClickNotifier
-import com.android.systemui.statusbar.notification.collection.NotifPipeline
-import com.android.systemui.statusbar.notification.data.repository.ActiveNotificationListRepository
-import com.android.systemui.statusbar.notification.row.OnUserInteractionCallback
 import com.android.systemui.statusbar.notification.stack.ui.view.NotificationScrollView
 import dagger.Lazy
 import javax.inject.Inject
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 
 @SysUISingleton
@@ -87,23 +80,8 @@ constructor(
     private val shadeSession: SaveableSession,
     private val stackScrollView: Lazy<NotificationScrollView>,
     private val jankMonitor: InteractionJankMonitor,
-    activeNotificationListRepository: ActiveNotificationListRepository,
-    notifPipeline: Lazy<NotifPipeline>,
-    onUserInteractionCallback: Lazy<OnUserInteractionCallback>,
-    activityStarter: Lazy<ActivityStarter>,
-    notificationClickNotifier: Lazy<NotificationClickNotifier>,
-    @Background bgDispatcher: CoroutineDispatcher,
+    private val budikActions: BudikNotificationActions,
 ) : Overlay {
-    private val budikActions =
-        BudikNotificationActions(
-            repository = activeNotificationListRepository,
-            notifPipeline = notifPipeline,
-            onUserInteractionCallback = onUserInteractionCallback,
-            activityStarter = activityStarter,
-            clickNotifier = notificationClickNotifier,
-            stackScrollView = stackScrollView,
-            bgDispatcher = bgDispatcher,
-        )
 
     override val key = Overlays.NotificationsShade
 

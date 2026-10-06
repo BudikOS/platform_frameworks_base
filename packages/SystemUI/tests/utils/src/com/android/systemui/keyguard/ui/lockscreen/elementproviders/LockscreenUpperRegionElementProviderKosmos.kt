@@ -23,6 +23,7 @@ import com.android.systemui.keyguard.ui.composable.elements.LockscreenUpperRegio
 import com.android.systemui.keyguard.ui.viewmodel.lockscreenUpperRegionViewModelFactory
 import com.android.systemui.kosmos.Kosmos
 import com.android.systemui.log.logcatLogBuffer
+import com.android.systemui.notifications.ui.composable.budikNotificationActions
 import com.android.systemui.statusbar.policy.nextAlarmController
 
 val Kosmos.lockscreenUpperRegionElementProvider by
@@ -34,5 +35,6 @@ val Kosmos.lockscreenUpperRegionElementProvider by
             broadcastDispatcher = broadcastDispatcher,
             nextAlarmController = nextAlarmController,
             lightRevealScrimRepository = lightRevealScrimRepository,
+            notificationActions = budikNotificationActions,
         )
     }

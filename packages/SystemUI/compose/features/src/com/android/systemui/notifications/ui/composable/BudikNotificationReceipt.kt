@@ -88,6 +88,8 @@ import com.android.internal.statusbar.NotificationVisibility
 import com.android.systemui.budik.ui.compose.Budik
 import com.android.systemui.budik.ui.compose.BudikKey
 import com.android.systemui.budik.ui.compose.budikKeycap
+import com.android.systemui.dagger.SysUISingleton
+import com.android.systemui.dagger.qualifiers.Background
 import com.android.systemui.plugins.ActivityStarter
 import com.android.systemui.statusbar.NotificationClickNotifier
 import com.android.systemui.statusbar.notification.collection.NotifPipeline
@@ -104,6 +106,7 @@ import dagger.Lazy
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import javax.inject.Inject
 import kotlin.math.abs
 import kotlin.math.sign
 import kotlinx.coroutines.CoroutineDispatcher
@@ -136,14 +139,17 @@ data class BudikNotificationItem(
  * rows do: open = content intent (dismissing the keyguard) + click report (auto cancel), dismiss =
  * user dismissal, clear all = the stack's clear all.
  */
-class BudikNotificationActions(
+@SysUISingleton
+class BudikNotificationActions
+@Inject
+constructor(
     private val repository: ActiveNotificationListRepository,
     private val notifPipeline: Lazy<NotifPipeline>,
     private val onUserInteractionCallback: Lazy<OnUserInteractionCallback>,
     private val activityStarter: Lazy<ActivityStarter>,
     private val clickNotifier: Lazy<NotificationClickNotifier>,
     private val stackScrollView: Lazy<NotificationScrollView>,
-    private val bgDispatcher: CoroutineDispatcher,
+    @Background private val bgDispatcher: CoroutineDispatcher,
 ) {
     val activeNotifications = repository.activeNotifications
 
@@ -320,7 +326,7 @@ private object SeenNotifications {
     val keys = mutableSetOf<String>()
 }
 
-private fun dateFormat(locale: Locale, skeleton: String) =
+internal fun dateFormat(locale: Locale, skeleton: String) =
     SimpleDateFormat(DateFormat.getBestDateTimePattern(locale, skeleton), locale)
 
 private fun String.capitalized(locale: Locale) = replaceFirstChar { it.titlecase(locale) }
@@ -642,7 +648,7 @@ private fun ReceiptRow(
 
 /** The app's icon in a keycap frame, named for TalkBack; loads off the main thread, once. */
 @Composable
-private fun AppIcon(item: BudikNotificationItem, actions: BudikNotificationActions) {
+internal fun AppIcon(item: BudikNotificationItem, actions: BudikNotificationActions) {
     val c = Budik.colors
     val context = LocalContext.current
     val sizePx = with(LocalDensity.current) { AppIconSize.roundToPx() }

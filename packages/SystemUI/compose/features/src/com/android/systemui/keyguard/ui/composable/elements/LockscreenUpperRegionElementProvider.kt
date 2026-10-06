@@ -33,6 +33,7 @@ import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeContent
 import androidx.compose.foundation.layout.width
@@ -66,6 +67,8 @@ import com.android.systemui.lifecycle.rememberViewModel
 import com.android.systemui.log.LogBuffer
 import com.android.systemui.log.core.Logger
 import com.android.systemui.log.dagger.KeyguardBlueprintLog
+import com.android.systemui.notifications.ui.composable.BudikLockNotifications
+import com.android.systemui.notifications.ui.composable.BudikNotificationActions
 import com.android.systemui.plugins.keyguard.ui.composable.elements.BaseLockscreenElement.ElementSource
 import com.android.systemui.plugins.keyguard.ui.composable.elements.LockscreenElement
 import com.android.systemui.plugins.keyguard.ui.composable.elements.LockscreenElementKeys.Clock
@@ -101,6 +104,7 @@ constructor(
     broadcastDispatcher: BroadcastDispatcher,
     nextAlarmController: NextAlarmController,
     private val lightRevealScrimRepository: LightRevealScrimRepository,
+    private val notificationActions: BudikNotificationActions,
 ) : LockscreenElementProvider {
     private val now: Flow<Long> =
         broadcastDispatcher
@@ -262,7 +266,24 @@ constructor(
                             .burnInAware(isClock = true),
                 )
                 MediaCarousel(Modifier.align(Alignment.Start))
-                Notifications(aodAlignment = Alignment.TopStart)
+                NotificationCards(darkText)
+            }
+        }
+
+        @Composable
+        private fun LockscreenScope<ContentScope>.NotificationCards(darkText: Boolean) {
+            Box(Modifier.fillMaxSize()) {
+                AODNotifications(Modifier.align(Alignment.TopStart))
+                AnimatedVisibility(viewModel.isNotificationStackActive && !viewModel.isDozing) {
+                    BudikLockNotifications(
+                        actions = notificationActions,
+                        darkText = darkText,
+                        modifier = Modifier.burnInAware(isClock = false),
+                    )
+                }
+                // The cards show the notifications; the stack stays, without height, for its
+                // lifecycle (heads-up, clear all, shelf) like in the notification shade.
+                LockscreenElement(Notifications.Stack, Modifier.fillMaxWidth().height(0.dp))
             }
         }
     }
