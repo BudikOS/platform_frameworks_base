@@ -27,6 +27,7 @@ import android.media.AudioManager.RINGER_MODE_VIBRATE
 import android.provider.Settings
 import android.view.HapticFeedbackConstants
 import android.view.ViewTreeObserver.InternalInsetsInfo
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
@@ -41,6 +42,7 @@ import androidx.compose.foundation.gestures.drag
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -108,6 +110,7 @@ import com.android.app.tracing.coroutines.launchTraced
 import com.android.settingslib.volume.shared.model.RingerMode
 import com.android.systemui.budik.ui.compose.Budik
 import com.android.systemui.budik.ui.compose.BudikIcons
+import com.android.systemui.budik.ui.compose.BudikKey
 import com.android.systemui.budik.ui.compose.BudikSoundPowerIcons
 import com.android.systemui.budik.ui.compose.budikKeycap
 import com.android.systemui.plugins.ActivityStarter
@@ -133,9 +136,10 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.onEach
 
 /**
- * Budík OS volume dialog (export/mockups 08_volume): a floating card with the ringer mode segment,
- * three vertical sliders (media, ringer, alarm) and a "Zvuk" key opening the sound settings. It
- * replaces the AOSP view binders but keeps their state, visibility and dismiss logic.
+ * Budík OS volume dialog (export/mockups 08_volume). Like on iOS and Pixel a volume key first shows
+ * one slider of the active stream at the edge, with a key that expands the card to the ringer
+ * mode segment, three vertical sliders (media, ringer, alarm) and a "Zvuk" key opening the sound
+ * settings. It replaces the AOSP view binders but keeps their state, visibility and dismiss logic.
  */
 @VolumeDialogScope
 class BudikVolumeDialogViewBinder
@@ -165,6 +169,7 @@ constructor(
 
         root.setContent {
             val progress = remember { Animatable(0f) }
+            var expanded by remember { mutableStateOf(false) }
             LaunchedEffect(Unit) {
                 viewModel.dialogVisibilityModel.conflate().collect {
                     when (it) {
@@ -176,6 +181,7 @@ constructor(
                         is VolumeDialogVisibilityModel.Dismissed -> {
                             progress.animateTo(0f, tween(DISMISS_MS))
                             dialog.dismiss()
+                            expanded = false
                         }
                         is VolumeDialogVisibilityModel.Invisible -> {}
                     }
@@ -188,6 +194,11 @@ constructor(
                 state = state,
                 ringer = ringer,
                 showSettings = showSettings,
+                expanded = expanded,
+                onExpand = {
+                    expanded = true
+                    viewModel.resetDialogTimeout()
+                },
                 onLevel = { stream, level -> controller.setStreamVolume(stream, level, true) },
                 onRinger = { mode ->
                     ringerInteractor.setRingerMode(RingerMode(mode))
@@ -234,6 +245,8 @@ private fun BudikVolumeDialog(
     state: VolumeDialogStateModel?,
     ringer: VolumeDialogRingerModel?,
     showSettings: Boolean,
+    expanded: Boolean,
+    onExpand: () -> Unit,
     onLevel: (stream: Int, level: Int) -> Unit,
     onRinger: (mode: Int) -> Unit,
     onSettings: () -> Unit,
@@ -261,15 +274,29 @@ private fun BudikVolumeDialog(
                         radius = Budik.RadiusL,
                         border = colors.line,
                     )
+                    .animateContentSize(spring(Spring.DampingRatioNoBouncy, Spring.StiffnessMediumLow))
                     .padding(12.dp)
-                    .width(SliderWidth * 3 + SliderGap * 2),
+                    .width(if (expanded) SliderWidth * 3 + SliderGap * 2 else SliderWidth),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
+            val sliders = state?.let { budikSliders(it) }.orEmpty()
+            if (!expanded) {
+                val active =
+                    sliders.firstOrNull { it.first.stream == state?.activeStream }
+                        ?: sliders.firstOrNull()
+                active?.let { (model, label, icon) ->
+                    Box(Modifier.height(SliderHeight)) {
+                        VolumeSlider(model, label, icon, onLevel, onInteract, showCaption = false)
+                    }
+                }
+                Spacer(Modifier.height(10.dp))
+                ExpandKey(onExpand)
+                return@Column
+            }
             if (ringer != null) {
                 RingerSegment(ringer, onRinger)
                 Spacer(Modifier.height(12.dp))
             }
-            val sliders = state?.let { budikSliders(it) }.orEmpty()
             Row(
                 modifier = Modifier.weight(1f, fill = false).heightIn(max = SliderHeight + 56.dp),
                 horizontalArrangement = Arrangement.spacedBy(SliderGap),
@@ -383,6 +410,7 @@ private fun VolumeSlider(
     icon: ImageVector,
     onLevel: (stream: Int, level: Int) -> Unit,
     onInteract: () -> Unit,
+    showCaption: Boolean = true,
 ) {
     val colors = Budik.colors
     val view = LocalView.current
@@ -478,6 +506,7 @@ private fun VolumeSlider(
                 Modifier.padding(bottom = IconBottom),
             )
         }
+        if (!showCaption) return@Column
         Spacer(Modifier.height(8.dp))
         BasicText(
             text = label,
@@ -500,6 +529,29 @@ private fun Modifier.overflowCentered(): Modifier = layout { measurable, constra
         measurable.measure(constraints.copy(minWidth = 0, maxWidth = constraints.maxWidth * 2))
     val width = constraints.constrainWidth(placeable.width)
     layout(width, placeable.height) { placeable.place((width - placeable.width) / 2, 0) }
+}
+
+/** Expands the single slider to the full card: a round key with three dots. */
+@Composable
+private fun ExpandKey(onExpand: () -> Unit) {
+    val colors = Budik.colors
+    BudikKey(
+        face = colors.bg,
+        shadow = colors.border,
+        radius = SliderWidth / 2,
+        onClick = onExpand,
+        modifier =
+            Modifier.size(SliderWidth, SliderWidth + Budik.KeyDepth).semantics {
+                contentDescription = "Další ovládání zvuku"
+            },
+    ) {
+        Canvas(Modifier.align(Alignment.Center).size(24.dp, 6.dp)) {
+            val radius = size.height / 2f
+            for (i in 0..2) {
+                drawCircle(colors.fg, radius, Offset(radius + i * (size.width - 2 * radius) / 2f, radius))
+            }
+        }
+    }
 }
 
 @Composable
