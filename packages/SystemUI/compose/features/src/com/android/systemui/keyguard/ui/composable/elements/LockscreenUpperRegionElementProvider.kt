@@ -16,7 +16,10 @@
 
 package com.android.systemui.keyguard.ui.composable.elements
 
+import android.app.AlarmManager
 import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Box
@@ -35,6 +38,7 @@ import androidx.compose.foundation.layout.safeContent
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -44,6 +48,7 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.max
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.window.core.layout.WindowSizeClass
 import com.android.compose.animation.Easings
 import com.android.compose.animation.scene.ContentScope
@@ -51,7 +56,9 @@ import com.android.compose.animation.scene.ElementContentScope
 import com.android.compose.animation.scene.PropertyTransformationBuilder
 import com.android.compose.animation.scene.TransitionBuilder
 import com.android.compose.windowsizeclass.LocalWindowSizeClass
+import com.android.systemui.broadcast.BroadcastDispatcher
 import com.android.systemui.dagger.SysUISingleton
+import com.android.systemui.keyguard.data.repository.LightRevealScrimRepository
 import com.android.systemui.keyguard.shared.model.ClockSize
 import com.android.systemui.keyguard.ui.viewmodel.LockscreenUpperRegionViewModel
 import com.android.systemui.keyguard.ui.viewmodel.LockscreenUpperRegionViewModel.Decision
@@ -67,7 +74,6 @@ import com.android.systemui.plugins.keyguard.ui.composable.elements.LockscreenEl
 import com.android.systemui.plugins.keyguard.ui.composable.elements.LockscreenElementKeys.Region
 import com.android.systemui.plugins.keyguard.ui.composable.elements.LockscreenElementKeys.Smartspace
 import com.android.systemui.plugins.keyguard.ui.composable.elements.LockscreenElementProvider
-import com.android.systemui.plugins.keyguard.ui.composable.elements.LockscreenMovableParentKeys.UpperRegion.NarrowLayout as NarrowScenes
 import com.android.systemui.plugins.keyguard.ui.composable.elements.LockscreenMovableParentKeys.UpperRegion.WideLayout as WideScenes
 import com.android.systemui.plugins.keyguard.ui.composable.elements.LockscreenScope
 import com.android.systemui.plugins.keyguard.ui.composable.elements.LockscreenScope.Companion.LockscreenElement
@@ -75,8 +81,14 @@ import com.android.systemui.plugins.keyguard.ui.composable.elements.LockscreenSc
 import com.android.systemui.res.R
 import com.android.systemui.shade.ShadeDisplayAware
 import com.android.systemui.shade.shared.model.ShadeMode
+import com.android.systemui.statusbar.policy.NextAlarmController
+import com.android.systemui.utils.coroutines.flow.conflatedCallbackFlow
 import com.google.errorprone.annotations.CompileTimeConstant
 import javax.inject.Inject
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onStart
 
 @SysUISingleton
 /** Provides a combined element for all lockscreen ui above the lock icon. */
@@ -86,7 +98,29 @@ constructor(
     @ShadeDisplayAware private val context: Context,
     @KeyguardBlueprintLog private val blueprintLog: LogBuffer,
     private val viewModelFactory: LockscreenUpperRegionViewModel.Factory,
+    broadcastDispatcher: BroadcastDispatcher,
+    nextAlarmController: NextAlarmController,
+    private val lightRevealScrimRepository: LightRevealScrimRepository,
 ) : LockscreenElementProvider {
+    private val now: Flow<Long> =
+        broadcastDispatcher
+            .broadcastFlow(
+                IntentFilter().apply {
+                    addAction(Intent.ACTION_TIME_TICK)
+                    addAction(Intent.ACTION_TIME_CHANGED)
+                    addAction(Intent.ACTION_TIMEZONE_CHANGED)
+                    addAction(Intent.ACTION_SCREEN_ON)
+                }
+            )
+            .onStart { emit(Unit) }
+            .map { System.currentTimeMillis() }
+
+    private val nextAlarm: Flow<AlarmManager.AlarmClockInfo?> = conflatedCallbackFlow {
+        val callback = NextAlarmController.NextAlarmChangeCallback { trySend(it) }
+        nextAlarmController.addCallback(callback)
+        awaitClose { nextAlarmController.removeCallback(callback) }
+    }
+
     private val logger = Logger(blueprintLog, "LockscreenUpperRegionElementProvider")
     override val elements: List<LockscreenElement> by lazy { listOf(UpperRegionElement()) }
 
@@ -202,61 +236,37 @@ constructor(
     }
 
     /** The Narrow Layouts are intended for phones */
+    // Budík: like on iOS the clock stays large above the media and the notifications
+    // (export/mockups 01_lock) instead of the Pixel switch to a small clock.
     inner class NarrowLayout(viewModel: LockscreenUpperRegionViewModel) : RegionLayout(viewModel) {
         @Composable
         override fun LockscreenScope<ContentScope>.Layout(modifier: Modifier) {
-            val clockSize =
-                logDecision("NarrowLayout: ClockSize") {
-                    viewModel.evaluateClockSize {
-                        when {
-                            viewModel.isNotificationStackActive ->
-                                Decision(ClockSize.SMALL, "isNotificationStackActive")
-                            viewModel.isMediaVisible -> Decision(ClockSize.SMALL, "isMediaVisible")
-                            else -> Decision(ClockSize.LARGE, "Default Case")
-                        }
-                    }
-                }
-
+            val now by now.collectAsStateWithLifecycle(System.currentTimeMillis())
+            val nextAlarm by nextAlarm.collectAsStateWithLifecycle(null)
+            val darkText by
+                lightRevealScrimRepository.useDarkWallpaperScrim.collectAsStateWithLifecycle()
             val narrowPadding =
                 dimensionResource(R.dimen.notification_side_paddings_single) +
                     dimensionResource(R.dimen.notification_panel_margin_horizontal)
 
-            NestedScenes(
-                sceneKey =
-                    when (clockSize) {
-                        ClockSize.LARGE -> NarrowScenes.LargeClock
-                        ClockSize.SMALL -> NarrowScenes.SmallClock
-                    },
-                transitions = {
-                    from(from = NarrowScenes.SmallClock, to = NarrowScenes.LargeClock) {
-                        configureClockSwitchTransition(
-                            enter = { fadeLargeClock() },
-                            exit = { fadeSmallClock() },
-                        )
-                    }
-                    from(from = NarrowScenes.LargeClock, to = NarrowScenes.SmallClock) {
-                        configureClockSwitchTransition(
-                            enter = { fadeSmallClock() },
-                            exit = { fadeLargeClock() },
-                        )
-                    }
-                },
-                modifier = Modifier.padding(horizontal = narrowPadding).then(modifier),
-                debugName = "NarrowLayout - Clocks",
-            ) {
-                scene(NarrowScenes.LargeClock) { LockscreenElement(Region.Clock.Large) }
-                scene(NarrowScenes.SmallClock) {
-                    Column {
-                        LockscreenElement(Region.Clock.Small)
-                        MediaCarousel(Modifier.align(Alignment.Start))
-                        Notifications(aodAlignment = Alignment.TopStart)
-                    }
-                }
+            Column(Modifier.padding(horizontal = narrowPadding).then(modifier)) {
+                BudikLockClock(
+                    now = now,
+                    nextAlarm = nextAlarm,
+                    darkText = darkText,
+                    modifier =
+                        Modifier.padding(
+                                top = dimensionResource(R.dimen.keyguard_clock_top_margin),
+                                bottom = 24.dp,
+                            )
+                            .burnInAware(isClock = true),
+                )
+                MediaCarousel(Modifier.align(Alignment.Start))
+                Notifications(aodAlignment = Alignment.TopStart)
             }
         }
     }
 
-    /** The wide layouts are intended for tablets / foldables */
     inner class WideLayout(viewModel: LockscreenUpperRegionViewModel) : RegionLayout(viewModel) {
         @Composable
         override fun LockscreenScope<ContentScope>.Layout(modifier: Modifier) {

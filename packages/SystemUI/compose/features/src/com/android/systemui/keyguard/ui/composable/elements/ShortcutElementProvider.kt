@@ -30,15 +30,12 @@ import androidx.compose.animation.graphics.ExperimentalAnimationGraphicsApi
 import androidx.compose.animation.graphics.res.animatedVectorResource
 import androidx.compose.animation.graphics.res.rememberAnimatedVectorPainter
 import androidx.compose.animation.graphics.vector.AnimatedImageVector
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
@@ -47,18 +44,16 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.PointerType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.onClick
@@ -68,11 +63,10 @@ import com.android.compose.animation.Expandable
 import com.android.compose.animation.rememberExpandableController
 import com.android.compose.animation.scene.ElementContentScope
 import com.android.compose.animation.scene.ElementKey
-import com.android.compose.theme.LocalAndroidColorScheme
 import com.android.compose.ui.graphics.painter.rememberDrawablePainter
 import com.android.keyguard.logging.KeyguardQuickAffordancesLogger
-import com.android.systemui.Flags.enableLockscreenBlur
 import com.android.systemui.animation.Expandable
+import com.android.systemui.budik.ui.compose.Budik
 import com.android.systemui.common.shared.model.ContentDescription.Companion.loadContentDescription
 import com.android.systemui.common.shared.model.Icon as SysUiIcon
 import com.android.systemui.dagger.SysUISingleton
@@ -90,7 +84,6 @@ import com.android.systemui.res.R
 import com.android.systemui.shade.ShadeDisplayAware
 import com.android.systemui.statusbar.KeyguardIndicationController
 import com.android.systemui.statusbar.VibratorHelper
-import com.android.systemui.window.domain.interactor.WindowRootViewBlurInteractor
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import org.xmlpull.v1.XmlPullParser
@@ -106,7 +99,6 @@ constructor(
     private val falsingManager: FalsingManager,
     private val vibratorHelper: VibratorHelper,
     private val hapticsViewModelFactory: KeyguardQuickAffordanceHapticViewModel.Factory,
-    private val windowRootViewBlurInteractor: WindowRootViewBlurInteractor,
     private val logger: KeyguardQuickAffordancesLogger,
 ) : LockscreenElementProvider {
 
@@ -165,13 +157,8 @@ constructor(
 
         val (pressed, setPressed) = remember { mutableStateOf(false) }
 
-        // Tint of the foreground drawable
         val foregroundTint =
-            if (quickAffordanceViewModel.isActivated) {
-                MaterialTheme.colorScheme.onPrimaryFixed
-            } else {
-                MaterialTheme.colorScheme.onSurface
-            }
+            if (quickAffordanceViewModel.isActivated) Budik.Ink else Budik.colors.fg
 
         failureAnimation(triggerFailed, setTriggerFailed, hapticsViewModel, xAnimation)
 
@@ -230,7 +217,6 @@ constructor(
                             alpha = if (quickAffordanceViewModel.isDimmed) DIM_ALPHA else alpha,
                             translationX = xAnimation.value.x,
                         )
-                        .drawBlurBehind(quickAffordanceViewModel, alpha)
                         .shortcutBackground(quickAffordanceViewModel)
                         .clickableShortcut(
                             expandable,
@@ -284,65 +270,18 @@ constructor(
         }
     }
 
-    @Composable
-    private fun Modifier.drawBlurBehind(
-        viewModel: KeyguardQuickAffordanceViewModel,
-        alpha: Float,
-    ): Modifier {
-        if (enableLockscreenBlur()) {
-            val viewRootImpl = LocalView.current.viewRootImpl
-            val drawable = remember {
-                viewRootImpl.createBackgroundBlurDrawable().apply { setBlurRadius(0) }
-            }
-            val cornerRadius = dimensionResource(R.dimen.keyguard_affordance_fixed_height)
-            val blurRadius = dimensionResource(R.dimen.keyguard_shortcuts_blur_radius)
-            val isBlurSupported by
-                windowRootViewBlurInteractor.isBlurCurrentlySupported.collectAsStateWithLifecycle()
-
-            if (isBlurSupported) {
-                return drawBehind {
-                    drawable.apply {
-                        setBlurRadius(blurRadius.roundToPx())
-                        setCornerRadius(cornerRadius.toPx())
-                        val backgroundAlpha = if (viewModel.isDimmed) DIM_ALPHA else alpha
-                        setAlpha((backgroundAlpha * 255).toInt())
-                    }
-                    drawIntoCanvas { canvas ->
-                        drawable.setBounds(0, 0, size.width.toInt(), size.height.toInt())
-                        drawable.draw(canvas.nativeCanvas)
-                    }
-                }
-            } else {
-                SideEffect {
-                    drawable.apply {
-                        // Stop BackgroundBlurDrawable from dispatching blur regions
-                        // to SF since now blur radius is set to 0.
-                        setBlurRadius(0)
-                    }
-                }
-            }
-        }
-        return this
-    }
-
+    /** Budík: a keycap with a hard 0 x 3 dp shadow, no blur; mint while the shortcut is on. */
     @Composable
     private fun Modifier.shortcutBackground(viewModel: KeyguardQuickAffordanceViewModel): Modifier {
-        if (!viewModel.isSelected) {
-            val isBlurSupported by
-                windowRootViewBlurInteractor.isBlurCurrentlySupported.collectAsStateWithLifecycle()
-            return this.background(
-                color =
-                    if (viewModel.isActivated) {
-                        MaterialTheme.colorScheme.primaryFixed
-                    } else if (enableLockscreenBlur() && isBlurSupported) {
-                        LocalAndroidColorScheme.current.surfaceEffect1
-                    } else {
-                        MaterialTheme.colorScheme.surfaceContainerHigh
-                    },
-                shape = CircleShape,
-            )
+        if (viewModel.isSelected) return this
+        val colors = Budik.colors
+        val face = if (viewModel.isActivated) Budik.Mint else colors.surface
+        val shadow = if (viewModel.isActivated) Budik.MintInk else colors.border
+        return drawBehind {
+            val corner = CornerRadius(Budik.RadiusL.toPx())
+            drawRoundRect(shadow, Offset(0f, Budik.KeyDepth.toPx()), size, corner)
+            drawRoundRect(face, cornerRadius = corner)
         }
-        return this
     }
 
     @OptIn(ExperimentalAnimationGraphicsApi::class)

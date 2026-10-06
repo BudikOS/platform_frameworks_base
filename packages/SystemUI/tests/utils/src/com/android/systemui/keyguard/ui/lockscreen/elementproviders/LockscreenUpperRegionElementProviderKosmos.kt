@@ -17,10 +17,13 @@
 package com.android.systemui.keyguard.ui.lockscreen.elementproviders
 
 import android.content.testableContext
+import com.android.systemui.broadcast.broadcastDispatcher
+import com.android.systemui.keyguard.data.lightRevealScrimRepository
 import com.android.systemui.keyguard.ui.composable.elements.LockscreenUpperRegionElementProvider
 import com.android.systemui.keyguard.ui.viewmodel.lockscreenUpperRegionViewModelFactory
 import com.android.systemui.kosmos.Kosmos
 import com.android.systemui.log.logcatLogBuffer
+import com.android.systemui.statusbar.policy.nextAlarmController
 
 val Kosmos.lockscreenUpperRegionElementProvider by
     Kosmos.Fixture {
@@ -28,5 +31,8 @@ val Kosmos.lockscreenUpperRegionElementProvider by
             context = testableContext,
             blueprintLog = logcatLogBuffer("LockscreenBuffer"),
             viewModelFactory = lockscreenUpperRegionViewModelFactory,
+            broadcastDispatcher = broadcastDispatcher,
+            nextAlarmController = nextAlarmController,
+            lightRevealScrimRepository = lightRevealScrimRepository,
         )
     }
