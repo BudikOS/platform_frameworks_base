@@ -274,7 +274,7 @@ object BudikPowerMenu {
                 if (battery != null) {
                     BasicText(
                         text = cs("baterie $battery %", "battery $battery %"),
-                        style = Budik.mono(12.sp, colors.fg3),
+                        style = Budik.meta(12.sp, colors.fg3),
                     )
                 }
             }

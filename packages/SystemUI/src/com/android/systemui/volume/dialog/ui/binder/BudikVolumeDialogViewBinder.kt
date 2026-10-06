@@ -488,7 +488,7 @@ private fun VolumeSlider(
             modifier = Modifier.overflowCentered(),
         )
         Spacer(Modifier.height(4.dp))
-        BasicText(text = "$percent %", style = Budik.mono(13.sp, colors.fg3), maxLines = 1)
+        BasicText(text = "$percent %", style = Budik.meta(13.sp, colors.fg3), maxLines = 1)
     }
 }
 
