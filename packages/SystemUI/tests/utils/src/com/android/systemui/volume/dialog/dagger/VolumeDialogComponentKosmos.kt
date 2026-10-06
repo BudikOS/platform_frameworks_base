@@ -17,10 +17,18 @@
 package com.android.systemui.volume.dialog.dagger
 
 import com.android.systemui.kosmos.Kosmos
+import com.android.systemui.plugins.activityStarter
+import com.android.systemui.plugins.volumeDialogController
+import com.android.systemui.volume.dialog.domain.interactor.volumeDialogStateInteractor
+import com.android.systemui.volume.dialog.domain.interactor.volumeDialogVisibilityInteractor
+import com.android.systemui.volume.dialog.ringer.domain.volumeDialogRingerInteractor
+import com.android.systemui.volume.dialog.settings.domain.volumeDialogSettingsButtonInteractor
 import com.android.systemui.volume.dialog.sliders.dagger.VolumeDialogSliderComponent
 import com.android.systemui.volume.dialog.sliders.dagger.volumeDialogSliderComponentFactory
+import com.android.systemui.volume.dialog.ui.binder.BudikVolumeDialogViewBinder
 import com.android.systemui.volume.dialog.ui.binder.VolumeDialogViewBinder
 import com.android.systemui.volume.dialog.ui.binder.volumeDialogViewBinder
+import com.android.systemui.volume.dialog.ui.viewmodel.volumeDialogViewModel
 import kotlinx.coroutines.CoroutineScope
 
 val Kosmos.volumeDialogComponentFactory by
@@ -30,6 +38,17 @@ val Kosmos.volumeDialogComponentFactory by
                 object : VolumeDialogComponent {
                     override fun volumeDialogViewBinder(): VolumeDialogViewBinder =
                         volumeDialogViewBinder
+
+                    override fun budikVolumeDialogViewBinder(): BudikVolumeDialogViewBinder =
+                        BudikVolumeDialogViewBinder(
+                            viewModel = volumeDialogViewModel,
+                            visibilityInteractor = volumeDialogVisibilityInteractor,
+                            stateInteractor = volumeDialogStateInteractor,
+                            ringerInteractor = volumeDialogRingerInteractor,
+                            settingsButtonInteractor = volumeDialogSettingsButtonInteractor,
+                            controller = volumeDialogController,
+                            activityStarter = activityStarter,
+                        )
 
                     override fun sliderComponentFactory(): VolumeDialogSliderComponent.Factory =
                         volumeDialogSliderComponentFactory

@@ -24,6 +24,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
 import androidx.activity.ComponentDialog
+import androidx.compose.ui.platform.ComposeView
 import com.android.app.tracing.coroutines.coroutineScopeTraced
 import com.android.systemui.dagger.qualifiers.Application
 import com.android.systemui.lifecycle.repeatWhenAttached
@@ -80,17 +81,19 @@ constructor(
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        if (isVolumeDialogVertical) {
-            setContentView(R.layout.volume_dialog)
-        } else {
-            setContentView(R.layout.volume_dialog_horizontal)
-        }
-        requireViewById<View>(R.id.volume_dialog).repeatWhenAttached {
+        // Budík OS: own Compose card (export/mockups 08_volume) instead of the AOSP layouts.
+        val root = ComposeView(context).apply { id = R.id.volume_dialog }
+        setContentView(
+            root,
+            ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.MATCH_PARENT,
+            ),
+        )
+        root.repeatWhenAttached {
             coroutineScopeTraced("[Volume]dialog") {
                 val component = componentFactory.create(this)
-                with(component.volumeDialogViewBinder()) {
-                    bind(this@VolumeDialog, isVolumeDialogVertical)
-                }
+                with(component.budikVolumeDialogViewBinder()) { bind(this@VolumeDialog, root) }
 
                 awaitCancellation()
             }

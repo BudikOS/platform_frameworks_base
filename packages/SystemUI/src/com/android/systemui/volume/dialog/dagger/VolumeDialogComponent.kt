@@ -21,6 +21,7 @@ import com.android.systemui.volume.dialog.dagger.module.VolumeDialogModule
 import com.android.systemui.volume.dialog.dagger.scope.VolumeDialog
 import com.android.systemui.volume.dialog.dagger.scope.VolumeDialogScope
 import com.android.systemui.volume.dialog.sliders.dagger.VolumeDialogSliderComponent
+import com.android.systemui.volume.dialog.ui.binder.BudikVolumeDialogViewBinder
 import com.android.systemui.volume.dialog.ui.binder.VolumeDialogViewBinder
 import dagger.BindsInstance
 import dagger.Subcomponent
@@ -35,6 +36,9 @@ import kotlinx.coroutines.CoroutineScope
 interface VolumeDialogComponent {
 
     fun volumeDialogViewBinder(): VolumeDialogViewBinder
+
+    /** Budík OS volume dialog content, see [BudikVolumeDialogViewBinder]. */
+    fun budikVolumeDialogViewBinder(): BudikVolumeDialogViewBinder
 
     fun sliderComponentFactory(): VolumeDialogSliderComponent.Factory
 
